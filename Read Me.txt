@@ -1,0 +1,5 @@
+Compute the internal energy of a lattice fluid for a specified volume fraction,
+lattice size (number of cells, assumed to be square), and dimensionality of the lattice.
+Use random sampling, and once it's working try to GPU-ify it (should be embarrassingly parallel)
+Confirm random sampling works by showing it recovers the brute-force solvable cases, then use stochastic method for larger problems.
+Then try to extrapolate with reasonable functional form (exponential/factorial)

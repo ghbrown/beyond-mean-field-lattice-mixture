@@ -1,0 +1,154 @@
+\documentclass[10pt]{article}
+\usepackage[OT1]{fontenc}
+\usepackage[utf8]{inputenc}
+\bibliographystyle{plain}
+
+\usepackage{algorithm2e}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{mathrsfs}
+\usepackage{mathtools}
+\usepackage{esint}
+\usepackage{braket}
+\usepackage{array}
+\usepackage{epsfig}
+\usepackage{hyperref}
+\renewcommand{\baselinestretch}{1.2}
+\setlength{\textheight}{9in}
+\setlength{\textwidth}{6.5in}
+\setlength{\headheight}{0in}
+\setlength{\headsep}{0in}
+\setlength{\topmargin}{0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\setlength{\parindent}{.3in}
+
+
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert} %create the norm sign as symbol
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert} %create the norm sign as symbol
+
+% swap definition of \abs* and \norm* with \abs and \norm
+% to scale delimiters without needing to type *
+\makeatletter
+\let\oldabs\abs
+\def\abs{\@ifstar{\oldabs}{\oldabs*}}
+\let\oldnorm\norm
+\def\norm{\@ifstar{\oldnorm}{\oldnorm*}}
+\makeatother
+
+%custom commands here
+% \newcommand{\new_command_name}{replacement text}
+
+
+\begin{document}
+\begin{center}
+    \textbf{\large Beyond mean field solutions to the lattice mixture model} \\
+    Gabriel Brown
+\end{center}
+
+%OUTLINE
+% statistical thermodynamics review?
+% lattice model
+% - coordination number, dimension
+% - energy of interaction
+% - simple results and equations
+% - mean field approximation and internal energy formula
+% computational approach
+% some extremum bounds
+%
+
+\section{Lattice model of a mixture} \footnote{The present description of a mixture on a lattice follows closely to \cite{dill}, with minor modifications and my own motivations and explanations.} 
+\subsection{Basics}
+A mixture of two condensed (liquid or solid) phases $A$ and $B$ may be crudely described by a single-degree-of-freedom-per-site lattice model with uniform coordination number $z$, meaning that each lattice site has $z$ nearest neighbors.
+Restricting the energetic interactions to nearest neighbor pairwise, there are three energetic constants for $A-A$, $B-B$, and $A-B$ interactions, respectively: $w_{AA}, \; w_{BB}, \; w_{AB}$, which may be generically positive, negative, or zero.
+Let $W$ represent a realization or configuration of the lattice, uniquely specifying the occupation of each site as $A$ or $B$.
+The total internal energy $U$ of such a configuration is then given by
+\begin{align}
+    U(W) = m_{AA} w_{AA} + m_{BB} w_{BB} + m_{AB} w_{AB}
+\end{align}
+where $m_{XY}$ is the number of $X-Y$ interactions in the system.
+Restricting to finite periodic lattice of $N$ total sites with $N_A$ $A$ sites and $N_B$ $B$ sites (uniquely defining a volume fraction $\nu = N_B / N$), one can further define the $m_{XY}$s.
+Since each pairwise interaction involved two sites, the total number of interactions for a periodic lattice with $N$ sites and coordination $z$ is
+\begin{align}
+    m_{AA} + m_{BB} + m_{AB} = \frac{z N}{2} = \frac{z}{2} \left( N_A + N_B \right),
+\end{align}
+further,
+\begin{align}
+    \frac{z N_A}{2} = m_{AA} + \frac{m_{AB}}{2}, \quad\quad
+    \frac{z N_B}{2} = m_{BB} + \frac{m_{AB}}{2}.
+\end{align}
+With $N$ and $x=N_B/N$ (equivalently $N_A$ and $N_B$) being known system constants, this model is nearly analytical apart from the unknown value of $m_AB$. \footnote{Realistic physical systems are often so large that it is more convenient to work in terms of densities like $N/V$, but since we will be interacting intimately with the lattice description, we maintain use of $N$ directly.} \footnote{One could also treat $m_{AA}$ or $m_{BB}$ as unknowns, the three $m_{\cdot}$ are algebraically related sucht that one of the three uniquely defines the others.}
+
+\subsection{Approximate solution}
+To keep such a lattice model analytical, we use the Bragg-Williams mean field approximation, which posits that the $A$ and $B$ sites are randomly distributed throughout the lattice.
+One can then approximate that $A$ sites have on average $z N_B / N$ neighboring $B$ sites, and the corresponding approximation for $m_{AB}$ is
+\begin{equation}
+    m_{AB} \approx \frac{z N_A N_B}{N} = z N (1-x) x.
+\end{equation}
+The standard way of writing the total energy of this model is
+\begin{align}
+    U &=
+    \frac{z w_{AA}}{2} N_A +
+    \frac{z w_{BB}}{2} N_B +
+    k_B T \chi_{AB} \frac{N_A N_B}{N}, \\
+    \chi_{AB} &=
+    \frac{z}{k_B T} \left( w_{AB} - \frac{w_{AA} + w_{BB}}{2} \right)
+\end{align}
+where $\chi_{AB}$ is the dimensionless ``exchange parameter''. \footnote{Admittedly, I don't see the utility in artificially introducing temperature dependence to a temperature-independent model via $\chi_{AB}$, but I believe the dimensionless parameter does have some merit for extracting properties from experiment.}
+The formula for average energy $\hat{U}=U/N$ per site is then
+\begin{align}
+    \hat{U} &=
+    \frac{z w_{AA}}{2} (1-x) +
+    \frac{z w_{BB}}{2} x +
+    k_B T \chi_{AB} (1-x) x
+\end{align}
+which is useful for working with lattices of varying sizes.
+
+We finish the introduction of the lattice model and mean field approximation by noting how the possible errors associated with the Bragg-Williams approximation, which will require a bit of statistical thermodynamics.
+The internal energy of a system in a given macrostate (in this case given by system size $N$ and $B$ volume fraction $x$) generically depends on the energies of all the possible microstates $W_i$. \footnote{As an example, for a 1-D system of a binary mixture of macrostate $N=3$ and $x=1/3$ the possible microstates are $[A,A,B],\; [A,B,A],\; [B,A,A]$. In this case, all microstates have the energy, but it should be clear that for larger systems this will generally not be the case.}
+Specifically, the energy of a macrostate is given by
+\begin{align}
+    U = \sum_{i=1}^{N_{micro}} p_i E_i
+    = \frac{1}{Q} \sum_{i=1}^{N_{micro}} E_i \exp\left(\frac{-E_i}{k_B T}\right)
+\end{align}
+where the sum runs over all possible microstates of the macrostate.
+
+
+\section{Statistical Thermodynamics Review}
+The thermodynamic partition function for a macrostate with microscopic degeneracy is
+\begin{align}
+    Q = \sum_{i=1}^{N_{micro}} W(E_i) \exp \left(\frac{-E_i}{k_B T} \right)
+\end{align}
+where $W(E_i)$ is the integer degeneracy of all states with energy $E_i$.
+
+The probability of a microstate $j$ is
+\begin{align}
+    p_j = \frac{\exp\left(\frac{-E_j}{k_B T}\right)}{Q} ,
+\end{align}
+while relative probabilities of microstates $j$ and $k$ is
+\begin{align}
+    \frac{p_j}{p_k} =
+    \frac{\exp\left(\frac{-E_j}{k_B T}\right)}{\exp\left(\frac{-E_k}{k_B T}\right)}
+    = \exp\left(\frac{-(E_j-E_k)}{k_B T}\right).
+\end{align}
+
+The energy of a macrostate is
+\begin{align}
+    U = \sum_{i=1}^{N_{micro}} p_i E_i
+    = \frac{1}{Q} \sum_{i=1}^{N_{micro}} E_i \exp\left(\frac{-E_i}{k_B T}\right)
+\end{align}
+
+\section{Fitting}
+generate a bunch of data, then use nonlinear least squares to fit a new function for $\hat{U}$
+
+do I fit $\hat{U}$ as function of system parameters, or do I fit $m_{AB}/N$ as a function of system parameters?
+
+\newpage
+\bibliography{references.bib}
+References (USE BIBTEX THOUGH)
+
+Relevant solution stuff on Molecular Driving Forces page 271
+
+\end{document}
+
