@@ -68,7 +68,7 @@ The total internal energy $U$ of such a configuration is then given by
     U(W) = m_{AA} w_{AA} + m_{BB} w_{BB} + m_{AB} w_{AB}
 \end{align}
 where $m_{XY}$ is the number of $X-Y$ interactions in the system.
-Restricting to finite periodic lattice of $N$ total sites with $N_A$ $A$ sites and $N_B$ $B$ sites (uniquely defining a volume fraction $\nu = N_B / N$), one can further define the $m_{XY}$s.
+Restricting to finite periodic lattice of $N$ total sites with $N_A$ $A$ sites and $N_B$ $B$ sites (uniquely defining a $B$ volume fraction $x = N_B / N$), one can further define the $m_{XY}$s.
 Since each pairwise interaction involved two sites, the total number of interactions for a periodic lattice with $N$ sites and coordination $z$ is
 \begin{align}
     m_{AA} + m_{BB} + m_{AB} = \frac{z N}{2} = \frac{z}{2} \left( N_A + N_B \right),
@@ -79,6 +79,18 @@ further,
     \frac{z N_B}{2} = m_{BB} + \frac{m_{AB}}{2}.
 \end{align}
 With $N$ and $x=N_B/N$ (equivalently $N_A$ and $N_B$) being known system constants, this model is nearly analytical apart from the unknown value of $m_AB$. \footnote{Realistic physical systems are often so large that it is more convenient to work in terms of densities like $N/V$, but since we will be interacting intimately with the lattice description, we maintain use of $N$ directly.} \footnote{One could also treat $m_{AA}$ or $m_{BB}$ as unknowns, the three $m_{\cdot}$ are algebraically related sucht that one of the three uniquely defines the others.}
+
+\section{Computational Implementation}
+discuss Metropolis Monte Carlo algorithm (cite MD book)
+
+discuss energy decomposition trick to make each update step
+
+discuss relaxation scheme
+
+discuss forcing every step to exchange A and B
+
+discuss convergence tolerance
+
 
 \subsection{Approximate solution}
 To keep such a lattice model analytical, we use the Bragg-Williams mean field approximation, which posits that the $A$ and $B$ sites are randomly distributed throughout the lattice.
@@ -148,7 +160,6 @@ do I fit $\hat{U}$ as function of system parameters, or do I fit $m_{AB}/N$ as a
 \bibliography{references.bib}
 References (USE BIBTEX THOUGH)
 
-Relevant solution stuff on Molecular Driving Forces page 271
 
 \end{document}
 

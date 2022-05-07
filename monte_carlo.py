@@ -6,10 +6,6 @@ import matplotlib.pyplot as plt
 
 """
 TO DO:
--check that signs of all physics quantities are correct (very important)
--implement a different algorithm to generate all acceptable lattice fillings,
-    current method wastes time by generating many unacceptable lattice fillings
-    and then throwing them away (try Chase's twiddle algorithm)
 -SOLUTION:implement it as a Monte Carlo method
     -given a fixed volume fraction start with a random filling
     -generate a new random filling and determine if the system will switch over
@@ -348,11 +344,20 @@ def computeProposedEnvironmentEnergy(lattice,center_indices_i,center_indices_j,
 
 
 def monte_carlo(dim,N_cellPerEdge,vFrac,w_AA,w_BB,w_AB,beta,
-                max_it,tol,initialization='random'):
+                max_it,S_per_tol,initialization='random',stop_interval=1000):
     N_cellTotal = int(np.power(N_cellPerEdge,dim))
+    """
+    ---Inputs---
+    S_per_tol : {float}
+        tolerance for error in mean, in interval (0,1)
+    """
     if (w_BB > w_AA):
         print(f'ERROR: w_BB must be smaller than w_AA')
         return
+    if ((S_per_tol < 0) or (S_per_tol >1)):
+        print(f'ERROR: S_per_tol must be in range (0,1)')
+        return
+
     # generate intialization
     if (initialization == 'random'):
         lattice = createLattice(dim,N_cellPerEdge,vFrac)
@@ -364,24 +369,35 @@ def monte_carlo(dim,N_cellPerEdge,vFrac,w_AA,w_BB,w_AB,beta,
         latticeFlat = np.array([0]*N_leftPad + [1]*N_cellB \
                                + [0]*N_rightPad)
         lattice = latticeFlat.reshape([N_cellPerEdge]*dim)
-    print(lattice)
+
+    # check if lattice is all one type
+    if (np.sum(lattice) in [0,1,N_cellTotal-1,N_cellTotal]):
+        # all lattice microstates have equal energy, energy always
+        # same, so don't run any Monte Carlo steps, just compute
+        # said energy
+        max_it = 0
 
     # energy in initial configuration
-    # NOTE:
-    # do rest of math relative to/as delta onto this quantity
-    # since all that appears are differences between energy?
     E_0 = computeTotalEnergy(lattice,w_AA,w_BB,w_AB) 
 
     deltaEVec = np.array([0.0]) # array of E(cur_iteration) - E_0
     it = 0 # iteration counter
-    var = 1000 # dummy value
-    # make tolerance relative to system size?
-    while ((it < max_it) and (var > tol)):
-        # select site i and j at random, these are environment center
-        center_indices_i = tuple(np.random.randint(low=0,high=N_cellPerEdge,
-                                                   size=dim))
-        center_indices_j = tuple(np.random.randint(low=0,high=N_cellPerEdge,
-                                                   size=dim))
+    S_per = 100000 # percentage error in mean (dummy value)
+    # get arrays of shape (N_x,dim) containing indices of site types
+    A_sites = np.vstack(np.where(lattice == 0)).T
+    B_sites = np.vstack(np.where(lattice == 1)).T
+    N_A = A_sites.shape[0]
+    N_B = B_sites.shape[0]
+    N_cellTotal = N_A + N_B
+    while ((it < max_it) and (S_per > S_per_tol)):
+        # select site i (A type) and j (B type) at random, these are
+        # environment centers
+        # (always swapping sites of different types)
+        # integer indices into A/B multi-index arrays
+        site_index_A = np.random.randint(low=0,high=N_A)
+        site_index_B = np.random.randint(low=0,high=N_B)
+        center_indices_i = tuple(A_sites[site_index_A])
+        center_indices_j = tuple(B_sites[site_index_B])
         E_env_cur = computeCurrentEnvironmentEnergy(lattice,
                                                     center_indices_i,center_indices_j,
                                                     w_AA,w_BB,w_AB)
@@ -389,24 +405,42 @@ def monte_carlo(dim,N_cellPerEdge,vFrac,w_AA,w_BB,w_AB,beta,
                                                       center_indices_i,center_indices_j,
                                                       w_AA,w_BB,w_AB)
         p_accept = min(1.0,np.exp(-beta*(E_env_prop-E_env_cur)))
-        #print(f'E_env_cur : {E_env_cur}')
-        #print(f'E_env_prop : {E_env_prop}')
 
         if (np.random.rand() < p_accept): # move accepted
-            site_i_cur = lattice[center_indices_i] # temp variables
-            site_j_cur = lattice[center_indices_j]
-            lattice[center_indices_i] = site_j_cur # perform swap
-            lattice[center_indices_j] = site_i_cur
+            # swap multi-indices of sites
+            A_sites[site_index_A] = np.array(center_indices_j)
+            B_sites[site_index_B] = np.array(center_indices_i)
+
+            # use updated multi-index arrays to update lattice
+            lattice[tuple(A_sites[site_index_A])] = 0
+            lattice[tuple(B_sites[site_index_B])] = 1
+
+
+            #site_i_cur = lattice[center_indices_i] # temp variables
+            #site_j_cur = lattice[center_indices_j]
+            #lattice[center_indices_i] = site_j_cur # perform swap
+            #lattice[center_indices_j] = site_i_cur
+
             E_new = deltaEVec[-1] - E_env_cur + E_env_prop
         else: # move not accepted
             E_new = deltaEVec[-1]
         deltaEVec = np.append(deltaEVec,E_new)
         it += 1
+        if (it%stop_interval == 0): # check if converged
+            EVecTemp = E_0*np.ones(deltaEVec.shape) + deltaEVec
+            E_mean = np.mean(EVecTemp) # mean energy
+            sigma_E = np.std(EVecTemp) # standard deviation of energy
+            print(f'standard deviation: {sigma_E}')
+            S = sigma_E/np.sqrt(it) # standard error of mean
+            S_per = np.abs(S/E_mean) # approximate percentage error of mean
+            print(f'S_per: {S_per}')
+            
     # add deltas to original value
-    print(lattice)
-    print(f'E_0 : {E_0}')
-    print(f'deltaEVec : {deltaEVec}')
     EVec = E_0*np.ones(deltaEVec.shape) + deltaEVec
+    A_site_values = [lattice[tuple(site)] for site in A_sites]
+    B_site_values = [lattice[tuple(site)] for site in B_sites]
+    print(f'miscategorization error : {np.sum(np.array(A_site_values))}')
+    print(f'miscategorization error : {np.sum(np.array(B_site_values))}')
     return lattice, EVec
 
     
@@ -418,12 +452,11 @@ if (__name__ == "__main__"):
     testLat = createLattice(testDim,testN_cellPerEdge,testvFrac)
 
     latticeTest,E_testVec = monte_carlo(testDim,testN_cellPerEdge,testvFrac,
-                            -1,-3,-1,1,100000,0.0,
-                            initialization='random')
+                            -1,-3,-1,0.1,np.inf,5e-5,
+                            initialization='sorted')
     plt.spy(latticeTest)
     plt.show()
 
-    print(np.mean(E_testVec[-1000:]))
 
     plt.plot(np.arange(1,E_testVec.shape[0]+1),E_testVec,color='black')
     plt.xlabel(r'iteration count')
