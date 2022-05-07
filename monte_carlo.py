@@ -452,15 +452,14 @@ if (__name__ == "__main__"):
     testLat = createLattice(testDim,testN_cellPerEdge,testvFrac)
 
     latticeTest,E_testVec = monte_carlo(testDim,testN_cellPerEdge,testvFrac,
-                            -1,-3,-1,0.1,np.inf,5e-5,
+                            -10e-3,-30e-3,-10e-3,0.1,np.inf,5e-5,
                             initialization='sorted')
     plt.spy(latticeTest)
     plt.show()
 
-
     plt.plot(np.arange(1,E_testVec.shape[0]+1),E_testVec,color='black')
     plt.xlabel(r'iteration count')
-    plt.ylabel(r'energy, E')
+    plt.ylabel(r'internal energy, $U$')
     plt.show()
 
                                                  
