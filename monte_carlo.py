@@ -410,16 +410,9 @@ def monte_carlo(dim,N_cellPerEdge,vFrac,w_AA,w_BB,w_AB,beta,
             # swap multi-indices of sites
             A_sites[site_index_A] = np.array(center_indices_j)
             B_sites[site_index_B] = np.array(center_indices_i)
-
             # use updated multi-index arrays to update lattice
             lattice[tuple(A_sites[site_index_A])] = 0
             lattice[tuple(B_sites[site_index_B])] = 1
-
-
-            #site_i_cur = lattice[center_indices_i] # temp variables
-            #site_j_cur = lattice[center_indices_j]
-            #lattice[center_indices_i] = site_j_cur # perform swap
-            #lattice[center_indices_j] = site_i_cur
 
             E_new = deltaEVec[-1] - E_env_cur + E_env_prop
         else: # move not accepted

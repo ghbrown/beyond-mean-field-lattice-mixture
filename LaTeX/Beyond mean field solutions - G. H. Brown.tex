@@ -157,6 +157,26 @@ generate a bunch of data, then use nonlinear least squares to fit a new function
 do I fit $\hat{U}$ as function of system parameters, or do I fit $m_{AB}/N$ as a function of system parameters?
 
 \newpage
+\section*{Appendix}
+\subsection{Permitted swaps}
+Each Monte Carlo step proposes an exchange between two sites in the lattice.
+Should each exchange propose swaps between two truly random lattice sites (possibly of the same type), or should each swap be forced to exchange lattice sites of different types.
+Of course, swapping two sites of the same type will not change the internal energy, but how does the choice of permitted swaps affect convergence rate and average energy?
+Figure \ref{fig:swap} below shows how convergence (in terms of number of Monte Carlo steps) differs for an example case. One can see that while both choice result in the same mean energy, restricting every swap to exchange sites of different types has multiple advantages.
+First, the ``transient'' or ``relaxation'' time (where the energy moves toward the equilibrium value) is about half the length, and the same error tolerance is achieved in about 70\% of the steps.
+The effect of this choice will be more exaggerated for extremely low and  high volume fractions $x$, where the ``swap any two'' scheme has a high probability of selecting a pair of the same type, whose exchange will not affect the internal energy.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.49\textwidth]{Figures/swap_any_two_convergence.png}
+\includegraphics[width=0.49\textwidth]{Figures/swap_A_B_only_convergence.png}
+\caption{Internal energy versus iteration with $L=100$, $d=2$, $x=0.5$, $\beta=0.1$, $w_{AA}=w_{AB}=-10 \times 10^{-3},w_{BB} = -30 \times 10^{-3}$ eV; both simulations were run until the percentage error in the mean energy was less than 0.005\%.
+The left figure is when swaps may exchange any two sites (independent of their types), while the right figure permits exchanges only between A and B sites.}
+\label{fig:swap}
+\end{figure}
+
+
+\newpage
 \bibliography{references.bib}
 References (USE BIBTEX THOUGH)
 
