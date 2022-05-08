@@ -124,7 +124,7 @@ Specifically, the energy of a macrostate is given by
     U = \sum_{i=1}^{N_{micro}} p_i E_i
     = \frac{1}{Q} \sum_{i=1}^{N_{micro}} E_i \exp\left(\frac{-E_i}{k_B T}\right)
 \end{align}
-where the sum runs over all possible microstates of the macrostate.
+where the sum runs over all possible microstates of the macrostate, and $k_B$ is the Boltzmann constant ($8.617 \times 10^{-5}$ eV K$^{-1}$ here)
 
 
 \section{Statistical Thermodynamics Review}
@@ -151,13 +151,43 @@ The energy of a macrostate is
     = \frac{1}{Q} \sum_{i=1}^{N_{micro}} E_i \exp\left(\frac{-E_i}{k_B T}\right)
 \end{align}
 
+\section{Computational Model}
+
+
+
+
 \section{Fitting}
 generate a bunch of data, then use nonlinear least squares to fit a new function for $\hat{U}$
 
 do I fit $\hat{U}$ as function of system parameters, or do I fit $m_{AB}/N$ as a function of system parameters?
 
+Table \ref{param_ranges} lists the possible ranges for each of the parameters.
+The spatial dimension $d$ covers all common model dimensions for physical systems, the side lattice side length $L$ was chosen to mix small lattices that almost certainly converge to the proper energy with larger lattices that better represent real physical systems.
+The interactions strengths were chosen with reference to real physical systems like water with hydrogen bonds of strength -0.24 eV and liquid argon (a common molecular dynamics model system) with equilibrium interaction -0.01 eV. \cite{water} \cite{argon}
+The range for temperature $T$ goes from absolute zero to one million Kelvin, which is approximately the point at which the thermal energy scale $k_B T$ is equal to that of the the interaction energy scale defined by $w_XY$.
+
+% test string
+
+\begin{center}
+\begin{tabular}{c | l | l | l} 
+    \hline
+    Parameter & Possible Values & Grid spacing & Units \\  \hline
+    $d$ & $\mathbb{Z} \in \{1,2,3\}$ & discrete & not applicable \\ \hline
+    $L$ & $\mathbb{Z} \in [5,100]$ & discrete & not applicable \\ \hline
+    $x$ & $\mathbb{R} \in [0.0,1.0)$ & linear & not applicable \\ \hline
+    $T$ & $\mathbb{R} \in [1.0 \times 10^{-3},1.0 \times 10^6]$ & logarithmic & K \\ \hline
+    $w_{AA}$ & $\mathbb{R} \in [-1.0, 1.0]$ & linear & eV \\ \hline
+    $w_{BB}$ & $\mathbb{R} \in [-1.0, 1.0]$ & linear & eV \\ \hline
+    $w_{AB}$ & $\mathbb{R} \in [-1.0, 1.0]$ & linear & eV \\
+    \label{tbl:param_ranges}
+\end{tabular}
+\end{center}
+
+
+include vertices of parameter hypercube, then take random samples from middle
+
 \newpage
-\section*{Appendix}
+\section{Appendix}
 \subsection{Permitted swaps}
 Each Monte Carlo step proposes an exchange between two sites in the lattice.
 Should each exchange propose swaps between two truly random lattice sites (possibly of the same type), or should each swap be forced to exchange lattice sites of different types.

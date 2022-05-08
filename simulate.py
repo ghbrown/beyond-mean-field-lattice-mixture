@@ -343,19 +343,21 @@ def computeProposedEnvironmentEnergy(lattice,center_indices_i,center_indices_j,
     return E_env_new
 
 
-def monte_carlo(dim,N_cellPerEdge,vFrac,w_AA,w_BB,w_AB,beta,
-                max_it,S_per_tol,initialization='random',stop_interval=1000):
+def lattice_mixture_monte_carlo(dim,N_cellPerEdge,vFrac,beta,
+                                w_AA,w_BB,w_AB,
+                                max_it,S_frac_tol,
+                                initialization='random',check_interval=1000):
     N_cellTotal = int(np.power(N_cellPerEdge,dim))
     """
     ---Inputs---
-    S_per_tol : {float}
+    S_frac_tol : {float}
         tolerance for error in mean, in interval (0,1)
     """
     if (w_BB > w_AA):
         print(f'ERROR: w_BB must be smaller than w_AA')
         return
-    if ((S_per_tol < 0) or (S_per_tol >1)):
-        print(f'ERROR: S_per_tol must be in range (0,1)')
+    if ((S_frac_tol < 0) or (S_frac_tol >1)):
+        print(f'ERROR: S_frac_tol must be in range (0,1)')
         return
 
     # generate intialization
@@ -389,7 +391,7 @@ def monte_carlo(dim,N_cellPerEdge,vFrac,w_AA,w_BB,w_AB,beta,
     N_A = A_sites.shape[0]
     N_B = B_sites.shape[0]
     N_cellTotal = N_A + N_B
-    while ((it < max_it) and (S_per > S_per_tol)):
+    while ((it < max_it) and (S_per > S_frac_tol)):
         # select site i (A type) and j (B type) at random, these are
         # environment centers
         # (always swapping sites of different types)
@@ -419,14 +421,12 @@ def monte_carlo(dim,N_cellPerEdge,vFrac,w_AA,w_BB,w_AB,beta,
             E_new = deltaEVec[-1]
         deltaEVec = np.append(deltaEVec,E_new)
         it += 1
-        if (it%stop_interval == 0): # check if converged
+        if (it%check_interval == 0): # check if converged
             EVecTemp = E_0*np.ones(deltaEVec.shape) + deltaEVec
             E_mean = np.mean(EVecTemp) # mean energy
             sigma_E = np.std(EVecTemp) # standard deviation of energy
-            print(f'standard deviation: {sigma_E}')
             S = sigma_E/np.sqrt(it) # standard error of mean
             S_per = np.abs(S/E_mean) # approximate percentage error of mean
-            print(f'S_per: {S_per}')
             
     # add deltas to original value
     EVec = E_0*np.ones(deltaEVec.shape) + deltaEVec
@@ -442,11 +442,13 @@ if (__name__ == "__main__"):
     testDim = 2
     testN_cellPerEdge = 100
     testvFrac = 0.5
+    testbeta = 0.1
     testLat = createLattice(testDim,testN_cellPerEdge,testvFrac)
 
-    latticeTest,E_testVec = monte_carlo(testDim,testN_cellPerEdge,testvFrac,
-                            -10e-3,-30e-3,-10e-3,0.1,np.inf,5e-5,
-                            initialization='sorted')
+    latticeTest,E_testVec = mixture_monte_carlo(testDim,testN_cellPerEdge,
+                                                testvFrac,testbeta,
+                                                -10e-3,-30e-3,-10e-3,np.inf,5e-5,
+                                                initialization='sorted')
     plt.spy(latticeTest)
     plt.show()
 
@@ -457,25 +459,3 @@ if (__name__ == "__main__"):
 
                                                  
 
-    """
-    #some main stuff goes down here
-    dim=2
-    N_cellPerEdge=4
-    vFrac=0.25
-    edgeMode='vacuum'
-    C=1 #ratio of attractive to thermal energy
-
-    #computeMacroconfigurationNearestNeighborPairFrequencies(dim,N_cellPerEdge,vFrac,edgeMode)
-
-    N_cellTotal=int(np.power(N_cellPerEdge,dim))
-    vFracArray=np.arange(N_cellTotal+1)/N_cellTotal
-    #vFracArray=np.ones((1,))
-    CArray=np.linspace(0.01,100,10)
-
-    U_byU_cellWidthArray=U_macro_versus_volume_fraction(dim,N_cellPerEdge,vFracArray,edgeMode,CArray)
-
-    for i_c,UAtFixedC in enumerate(U_byU_cellWidthArray):
-        plt.plot(vFracArray,UAtFixedC,label=f'C={CArray[i_c]}')
-    plt.legend()
-    plt.show()
-    """

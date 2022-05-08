@@ -1,0 +1,1 @@
+d, L, x, T, w_AA, w_BB, w_AB, U
