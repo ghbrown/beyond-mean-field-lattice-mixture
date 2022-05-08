@@ -20,6 +20,7 @@ def extreme_points(dim_range,L_range,x_range,T_range,
     # reshape into order 2 array of shape
     #   (n_vertices,number of parameters)
     vertices_flat = np.reshape(arrays,(7,2**7)).T 
+    print(vertices_flat[0])
     return vertices_flat
 
 
@@ -43,7 +44,7 @@ def run_parameter_point(parameter_point,S_frac_tol):
     # wrapper to take parameter configuration and return U
     # by running Monte Carlo
     pp = parameter_point # alias
-    max_it = np.inf
+    max_it = int(100e3)
     initialization = 'random'
     print_conv = 'yes'
     stop_interval = 5000
@@ -62,6 +63,10 @@ def run_parameter_point(parameter_point,S_frac_tol):
                                             check_interval=stop_interval,
                                             print_conv=print_conv)
     U = np.mean(U_vec)
+    print(point_entry_string(pp,U))
+    if (U_vec.shape[0] > int(10e3)):
+        plt.plot(range(U_vec.shape[0]),U_vec,'k')
+        plt.show()
     return U
 
 
@@ -91,13 +96,8 @@ def generate_vertex_data(data_file_name,
     extrema_flat = extreme_points(dim_range,L_range,x_range,T_range,
                                   w_AA_range,w_BB_range,w_AB_range)
     n_points = extrema_flat.shape[0]
-    for i_point, point in enumerate(extrema_flat):
+    for i_point, parameter_point in enumerate(extrema_flat):
         print(f'running extreme point {i_point+1}/{n_points}')
-        # generate random parameter point in parameter space
-        parameter_point = sample_parameter_point(dim_range,L_range,
-                                                 x_range,T_range,
-                                                 w_AA_range,w_BB_range,
-                                                 w_AB_range)
         # calculate U for mixture on lattice defined by parameters
         U_point = run_parameter_point(parameter_point,S_frac_tol)
         # write parameter point and energy to file
