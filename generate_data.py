@@ -144,10 +144,10 @@ if (__name__ == "__main__"):
     max_it = int(200e3) # in case tolerance not met quickly
     S_frac_tol = 5e-5 # tolerance of error as fraction of mean
 
-    #generate_random_data('data/random_point_data.txt',10,
-    #                     dim_range,L_range,x_range,T_range,
-    #                     w_AA_range,w_BB_range,w_AB_range,
-    #                     S_frac_tol)
+    generate_random_data('data/random_point_data.txt',1000,
+                         dim_range,L_range,x_range,T_range,
+                         w_AA_range,w_BB_range,w_AB_range,
+                         max_it,S_frac_tol)
 
 
      
