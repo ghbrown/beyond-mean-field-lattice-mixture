@@ -4,38 +4,6 @@ import scipy as sp
 from scipy import ndimage
 import matplotlib.pyplot as plt
 
-"""
-TO DO:
--SOLUTION:implement it as a Monte Carlo method
-    -given a fixed volume fraction start with a random filling
-    -generate a new random filling and determine if the system will switch over
-        to that filling using the ratio of the Boltzmann factors
-    -once a loop determine the number of nearest neighbors of the configuration
-        and add one to the tally for that number
-    -once all the looping is done take the ratio of the number of sampled configurations
-        which had n nearest neighbors to the total number of sample configurations
-        as probability p_n
-    -use the array p_n and the energy for each number of nearest neighbors to
-        compute <U>/epsilon or whatever it's called
-    -confirm that this solution works by comparing it with the direct method
-        for low total cell number lattices (confirm stochastic approach with
-        exact/deterministic approach)
-STUFF TO KEEP IN MIND (PERHAPS FOR WRITING UP THIS PAPER):
-    E_microstate=N_nnpMicrostate*U(cellwidth)
-    Q=sum_microstates[W_microstate*exp(-Beta*N_nnpMicrostate*U(cellwidth))]
-    let Beta*U(cellWidth)=C, some constant which characterizes the ratio of the
-        attraction between atoms to the thermal energy
-    must represent the internal energy as a ratio of the internal energy to U(cellWidth)
-        since U(cellWidth) is not specified, only C
-"""
-
-"""
-THINGS TO CHECK:
-- does it make a difference if proposed step always swaps B site and
-  A site, or if proposed move can swap B with B or A with A, etc.
-- convergence of initially random filling versus initially sorted
-  filling (0..011..1 or 0..011..100..0)
-"""
 
 def latticeToInteger(lattice):
     """
@@ -353,8 +321,8 @@ def lattice_mixture_monte_carlo(dim,N_cellPerEdge,vFrac,beta,
     S_frac_tol : {float}
         tolerance for error in mean, in interval (0,1)
     """
-    if (w_BB > w_AA):
-        print(f'ERROR: w_BB must be smaller than w_AA')
+    if (vFrac > 0.5):
+        print(f'ERROR: volume fraction of B (vFrac) must be smaller than 0.5, since A-B symmetry covers vFrac > 0.5')
         return
     if ((S_frac_tol < 0) or (S_frac_tol >1)):
         print(f'ERROR: S_frac_tol must be in range (0,1)')
@@ -432,8 +400,6 @@ def lattice_mixture_monte_carlo(dim,N_cellPerEdge,vFrac,beta,
     EVec = E_0*np.ones(deltaEVec.shape) + deltaEVec
     A_site_values = [lattice[tuple(site)] for site in A_sites]
     B_site_values = [lattice[tuple(site)] for site in B_sites]
-    print(f'miscategorization error : {np.sum(np.array(A_site_values))}')
-    print(f'miscategorization error : {np.sum(np.array(B_site_values))}')
     return lattice, EVec
 
     

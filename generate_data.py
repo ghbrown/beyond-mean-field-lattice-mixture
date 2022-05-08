@@ -5,15 +5,22 @@ import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
 
-from monte_carlo import *
+from simulate import *
+
 
 k_B = 8.617e-5 # Boltzmann constant, [eV K^-1]
 
 def extreme_points(dim_range,L_range,x_range,T_range,
                    w_AA_range,w_BB_range,w_AB_range):
-    # all vertices of hypercube spanned by ranges
-    # use meshgrid
-    pass
+    # enumerates all vertices of hypercube spanned by extreme
+    # values of parameters
+    grid_tuple = (dim_range,L_range,x_range,T_range,
+                   w_AA_range,w_BB_range,w_AB_range)
+    arrays = np.meshgrid(*grid_tuple)
+    # reshape into order 2 array of shape
+    #   (n_vertices,number of parameters)
+    vertices_flat = np.reshape(arrays,(7,2**7)).T 
+    return vertices_flat
 
 
 def sample_parameter_point(dim_range,L_range,x_range,T_range,
@@ -39,14 +46,15 @@ def run_parameter_point(parameter_point,S_frac_tol):
     max_it = np.inf
     initialization = 'random'
     stop_interval = 5000
-    dim  = pp[0]
-    L    = pp[1]
+    dim  = int(pp[0])
+    L    = int(pp[1])
     x    = pp[2]
     T    = pp[3]
     w_AA = pp[4]
     w_BB = pp[5]
     w_AB = pp[6]
     beta = 1/(k_B*T)
+    print(f'parameter point : {pp}')
     __, U_vec = lattice_mixture_monte_carlo(dim,L,x,beta,
                                             w_AA,w_BB,w_AB,
                                             max_it,S_frac_tol,
@@ -55,7 +63,8 @@ def run_parameter_point(parameter_point,S_frac_tol):
     U = np.mean(U_vec)
     return U
 
-def point_entry_string(parameter_point,U)
+
+def point_entry_string(parameter_point,U):
     pp = parameter_point # alias
     dim  = pp[0]
     L    = pp[1]
@@ -66,6 +75,34 @@ def point_entry_string(parameter_point,U)
     w_AB = pp[6]
     out_string = f'{dim}, {L}, {x}, {T}, {w_AA}, {w_BB}, {w_AB}, {U}\n'
     return out_string
+
+
+def generate_vertex_data(data_file_name,
+                         dim_range,L_range,x_range,T_range,
+                         w_AA_range,w_BB_range,w_AB_range,
+                         S_frac_tol):
+    # overwrite data (always same points) and write header
+    with open(data_file_name,'w+') as f:
+        header_string = 'd, L, x, T, w_AA, w_BB, w_AB, U\n'
+        f.writelines([header_string])
+    
+    # run all extreme points
+    extrema_flat = extreme_points(dim_range,L_range,x_range,T_range,
+                                  w_AA_range,w_BB_range,w_AB_range)
+    n_points = extrema_flat.shape[0]
+    for i_point, point in enumerate(extrema_flat):
+        print(f'running random point {i_point+1}/{n_points}')
+        # generate random parameter point in parameter space
+        parameter_point = sample_parameter_point(dim_range,L_range,
+                                                 x_range,T_range,
+                                                 w_AA_range,w_BB_range,
+                                                 w_AB_range)
+        # calculate U for mixture on lattice defined by parameters
+        U_point = run_parameter_point(parameter_point,S_frac_tol)
+        # write parameter point and energy to file
+        entry_string = point_entry_string(parameter_point,U_point)
+        with open(data_file_name,'a') as f:
+            f.writelines([entry_string])
 
 
 def generate_random_data(data_file_name,max_points,
@@ -93,7 +130,7 @@ def generate_random_data(data_file_name,max_points,
         U_point = run_parameter_point(parameter_point,S_frac_tol)
         # write parameter point and energy to file
         entry_string = point_entry_string(parameter_point,U_point)
-        with open(data_file_name,'a'):
+        with open(data_file_name,'a') as f:
             f.writelines([entry_string])
         n_points += 1
 
@@ -102,14 +139,20 @@ def generate_random_data(data_file_name,max_points,
 if (__name__ == "__main__"):
     dim_range  = np.array([1,3])
     L_range    = np.array([5,100])
-    x_range    = np.array([0.0,1.0])
+    x_range    = np.array([0.0,0.5])
     T_range    = np.array([1e-3,1e6]) # [K]
     w_AA_range = np.array([-1.0,1.0]) # [eV]
     w_BB_range = np.array([-1.0,1.0]) # [eV]
     w_AB_range = np.array([-1.0,1.0]) # [eV]
     S_frac_tol = 5e-5 # tolerance of error as fraction of mean
-    generate_random_data('data/random_point_data.txt',10,
+    #generate_random_data('data/random_point_data.txt',10,
+    #                     dim_range,L_range,x_range,T_range,
+    #                     w_AA_range,w_BB_range,w_AB_range,
+    #                     S_frac_tol)
+    generate_vertex_data('data/extreme_point_data.txt',
                          dim_range,L_range,x_range,T_range,
                          w_AA_range,w_BB_range,w_AB_range,
                          S_frac_tol)
+
+
      

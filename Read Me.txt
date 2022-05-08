@@ -1,5 +1,7 @@
-Compute the internal energy of a lattice fluid for a specified volume fraction,
-lattice size (number of cells, assumed to be square), and dimensionality of the lattice.
-Use random sampling, and once it's working try to GPU-ify it (should be embarrassingly parallel)
-Confirm random sampling works by showing it recovers the brute-force solvable cases, then use stochastic method for larger problems.
-Then try to extrapolate with reasonable functional form (exponential/factorial)
+STUFF TO KEEP IN MIND (PERHAPS FOR WRITING UP THIS PAPER):
+    E_microstate=N_nnpMicrostate*U(cellwidth)
+    Q=sum_microstates[W_microstate*exp(-Beta*N_nnpMicrostate*U(cellwidth))]
+    let Beta*U(cellWidth)=C, some constant which characterizes the ratio of the
+        attraction between atoms to the thermal energy
+    must represent the internal energy as a ratio of the internal energy to U(cellWidth)
+        since U(cellWidth) is not specified, only C
