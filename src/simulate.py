@@ -4,7 +4,9 @@ import scipy as sp
 from scipy import ndimage
 import matplotlib.pyplot as plt
 
-# global variables: kernelNNList
+# global variables: k_B, kernelNNList
+
+k_B = 8.617e-5 # Boltzmann constant, [eV K^-1]
 
 def latticeToInteger(lattice):
     """

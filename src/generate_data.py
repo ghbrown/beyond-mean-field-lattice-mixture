@@ -1,14 +1,11 @@
 
 import copy
 import numpy as np
-import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
 
 from simulate import *
 
-
-k_B = 8.617e-5 # Boltzmann constant, [eV K^-1]
 
 def extreme_points(dim_range,L_range,x_range,T_range,
                    w_AA_range,w_BB_range,w_AB_range):
@@ -144,10 +141,19 @@ if (__name__ == "__main__"):
     max_it = int(200e3) # in case tolerance not met quickly
     S_frac_tol = 5e-5 # tolerance of error as fraction of mean
 
-    generate_random_data('data/random_point_data.txt',1000,
+    """
+    generate_random_data('data/raw/random_point_data.txt',1000,
                          dim_range,L_range,x_range,T_range,
                          w_AA_range,w_BB_range,w_AB_range,
                          max_it,S_frac_tol)
+    """
+    """
+    # this overwrites file, be careful
+    generate_vertex_data('data/raw/extreme_point_data.txt',
+                         dim_range,L_range,x_range,T_range,
+                         w_AA_range,w_BB_range,w_AB_range,
+                         max_it,S_frac_tol):
+    """
 
 
      
