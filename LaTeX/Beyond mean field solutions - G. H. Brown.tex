@@ -124,26 +124,28 @@ Specifically, the energy of a macrostate is given by
     U = \sum_{i=1}^{N_{micro}} p_i E_i
     = \frac{1}{Q} \sum_{i=1}^{N_{micro}} E_i \exp\left(\frac{-E_i}{k_B T}\right)
 \end{align}
-where the sum runs over all possible microstates of the macrostate, and $k_B$ is the Boltzmann constant ($8.617 \times 10^{-5}$ eV K$^{-1}$ here)
+where the sum runs over all possible microstates of the macrostate, and $k_B$ is the Boltzmann constant ($8.617 \times 10^{-5}$ eV K$^{-1}$ in the units used here).
+[microstates totally ignored, in reality microstates that maximize number of most favorable interactions will be preferred at low temperature (look at book wording)]
+[no true temperature dependence, while real systems depend heavily on temperature (near energetic minimum when cool, near random when hot)]
 
 
-\section{Statistical Thermodynamics Review}
-The thermodynamic partition function for a macrostate with microscopic degeneracy is
-\begin{align}
-    Q = \sum_{i=1}^{N_{micro}} W(E_i) \exp \left(\frac{-E_i}{k_B T} \right)
-\end{align}
-where $W(E_i)$ is the integer degeneracy of all states with energy $E_i$.
-
-The probability of a microstate $j$ is
-\begin{align}
-    p_j = \frac{\exp\left(\frac{-E_j}{k_B T}\right)}{Q} ,
-\end{align}
-while relative probabilities of microstates $j$ and $k$ is
-\begin{align}
-    \frac{p_j}{p_k} =
-    \frac{\exp\left(\frac{-E_j}{k_B T}\right)}{\exp\left(\frac{-E_k}{k_B T}\right)}
-    = \exp\left(\frac{-(E_j-E_k)}{k_B T}\right).
-\end{align}
+%\section{Statistical Thermodynamics Review}
+%The thermodynamic partition function for a macrostate with microscopic degeneracy is
+%\begin{align}
+%    Q = \sum_{i=1}^{N_{micro}} W(E_i) \exp \left(\frac{-E_i}{k_B T} \right)
+%\end{align}
+%where $W(E_i)$ is the integer degeneracy of all states with energy $E_i$.
+%
+%The probability of a microstate $j$ is
+%\begin{align}
+%    p_j = \frac{\exp\left(\frac{-E_j}{k_B T}\right)}{Q} ,
+%\end{align}
+%while relative probabilities of microstates $j$ and $k$ is
+%\begin{align}
+%    \frac{p_j}{p_k} =
+%    \frac{\exp\left(\frac{-E_j}{k_B T}\right)}{\exp\left(\frac{-E_k}{k_B T}\right)}
+%    = \exp\left(\frac{-(E_j-E_k)}{k_B T}\right).
+%\end{align}
 
 The energy of a macrostate is
 \begin{align}
@@ -152,21 +154,50 @@ The energy of a macrostate is
 \end{align}
 
 \section{Computational Model}
+order $d$ square array populated by integers $0, 1$, periodic boundary conditions
+
+monte carlo (brief algorithm like MD book)
+
+computational tricks
+    convolution
+    energy partition trick into local energy to reduce complexity
+    mention restriciting proposed exchanges (point to appendix)
 
 
+\subsection{Termination}
+The termination condition for error is on the approximate relative error of the mean energy $\bar{U}$.
+Using a relative error condition is especially important here, as this program will be used to simulate lattices of many different sizes and interactions strengths, where the average of energies may differ by orders of magnitude.
+Specifically, termination occurs when
+\begin{align}
+    S_{\bar{U}} =
+    \frac{\sigma_{\hat{U}}}{\sqrt{N_{it}}} \frac{1}{\bar{U}}
+    < \tau
+\end{align}
+where $S_{\bar{U}}$ is the relative error in the mean energy, $\sigma_{\hat{U}}$ is the standard deviation of the computed energy, and $N_{it}$ is the number of Monte Carlo iterations (steps).
+The variable $\tau$ is the user specified tolerance, with $\tau = 0.01$ being 1\% error in the average internal energy.
+Emperically, a value of $\tau = 50 \times 10^{-6}$ was found to give well converged results.
 
+Though the aformentioned metric is relatively simple and robuts, some systems converge very slowly numerically, even though they are well converged in reality.
+For example, a $d=1, L=5, x=0.4$ system has only two microstates, which it can randomly switch between at high temperature.
+This gave emperically slow convergence, even though though the average energy converged to the true value rather quickly, and therefore a maximum iteration count $N_{it max}$ was also implemented and used.
+Emperically, a value of $N_{it max} = 200 \times 10^3$ was found to give satisfactory looking convergence curves even when convergence was slow under the relative error metric.
 
-\section{Fitting}
-generate a bunch of data, then use nonlinear least squares to fit a new function for $\hat{U}$
+For this 
+
+\section{Results}
+[some pretty 1-D and 2-D plots]
+
+\section{Model Construction}
+[overall scheme: generate a bunch of data, then use nonlinear least squares to fit a new function for $\hat{U}$ or $\hat{w}_AB$]
 
 do I fit $\hat{U}$ as function of system parameters, or do I fit $m_{AB}/N$ as a function of system parameters?
 
-Table \ref{param_ranges} lists the possible ranges for each of the parameters.
+\subsection{Parameter Sampling Scheme}
+Table \ref{tbl:param_ranges} lists the possible ranges for each of the parameters.
 The spatial dimension $d$ covers all common model dimensions for physical systems, the side lattice side length $L$ was chosen to mix small lattices that almost certainly converge to the proper energy with larger lattices that better represent real physical systems.
-The interactions strengths were chosen with reference to real physical systems like water with hydrogen bonds of strength -0.24 eV and liquid argon (a common molecular dynamics model system) with equilibrium interaction -0.01 eV. \cite{water} \cite{argon}
+The $B$ volume fraction $x$ only varies between 0 and 0.5 because the system is symmetric under a relabeling of $A \iff B, w_AA \iff w_BB$.
+The interactions strengths were chosen with reference to real physical systems like water with hydrogen bonds of strength -0.24 eV and liquid argon (a common molecular dynamics model system) with equilibrium interaction -0.01 eV \cite{water} \cite{argon}.
 The range for temperature $T$ goes from absolute zero to one million Kelvin, which is approximately the point at which the thermal energy scale $k_B T$ is equal to that of the the interaction energy scale defined by $w_XY$.
-
-% test string
 
 \begin{center}
 \begin{tabular}{c | l | l | l} 
@@ -174,7 +205,7 @@ The range for temperature $T$ goes from absolute zero to one million Kelvin, whi
     Parameter & Possible Values & Grid spacing & Units \\  \hline
     $d$ & $\mathbb{Z} \in \{1,2,3\}$ & discrete & not applicable \\ \hline
     $L$ & $\mathbb{Z} \in [5,100]$ & discrete & not applicable \\ \hline
-    $x$ & $\mathbb{R} \in [0.0,1.0)$ & linear & not applicable \\ \hline
+    $x$ & $\mathbb{R} \in [0.0,0.5)$ & linear & not applicable \\ \hline
     $T$ & $\mathbb{R} \in [1.0 \times 10^{-3},1.0 \times 10^6]$ & logarithmic & K \\ \hline
     $w_{AA}$ & $\mathbb{R} \in [-1.0, 1.0]$ & linear & eV \\ \hline
     $w_{BB}$ & $\mathbb{R} \in [-1.0, 1.0]$ & linear & eV \\ \hline
@@ -183,8 +214,9 @@ The range for temperature $T$ goes from absolute zero to one million Kelvin, whi
 \end{tabular}
 \end{center}
 
-
-include vertices of parameter hypercube, then take random samples from middle
+The points to which the model was fit include all $2^7$ vertices of the hypercube defined by the extreme values of the parameters in Table \ref{tbl:param_ranges}, in addition to 1000 random points from the interior of the hypercube.
+At each of these 1128 points, the energy $\bar{U}$ was computed using the lattice mixture Monte Carlo scheme detailed previously, with termination at $200 \times 10^3$ iterations or $\hat{S}_{\bar{U}} < 5 \times 10^{-5}$ (whichever came first).
+For all points the lattice was initialized as a random lattice of the specified $B$ volume fraction $x$.
 
 \newpage
 \section{Appendix}
