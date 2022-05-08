@@ -4,6 +4,7 @@ import scipy as sp
 from scipy import ndimage
 import matplotlib.pyplot as plt
 
+# global variables: kernelNNList
 
 def latticeToInteger(lattice):
     """
@@ -72,6 +73,11 @@ def nearestNeighborKernel(dim):
     return nn_kernel
 
 
+# pregenerate nearest neighbor kernels (relatively expensive)
+kernelNNList = [0] # dummy dim=0 case for sensible indexing of list later 
+kernelNNList += [nearestNeighborKernel(dim) for dim in range(1,7)]
+
+
 def getNearestNeighborEnvironment(lattice,center_indices):
     """
     gets lattice environment of site at center_indices from lattice
@@ -125,7 +131,7 @@ def computeNumberOfInteractions(lattice):
     N_cellB = np.sum(lattice)
     N_cellA = N_cellTotal - N_cellB
 
-    kernelNN = nearestNeighborKernel(dim) # generate kernel array
+    kernelNN = kernelNNList[dim] # retrieve kernel array
     # convolving the nearest neighbor kernel with 0,1 lattice then
     #   reports the number of B neighbors for each site
     numBNeighborArray = sp.ndimage.convolve(lattice,kernelNN,mode='wrap')
@@ -173,7 +179,7 @@ def computeNumberOfInteractionsEnvironment(environment):
     z = dim*2 # number of nearest neighbors sites for a single site
     center_indices = tuple([1]*dim) # indices of central site of environment
     center_site = environment[center_indices]
-    kernelNN = nearestNeighborKernel(dim) # generate kernel array
+    kernelNN = kernelNNList[dim] # retrieve kernel array
 
     # convolving the nearest neighbor kernel with 0,1 lattice reports
     #   the number of B neighbors for each site
@@ -314,8 +320,8 @@ def computeProposedEnvironmentEnergy(lattice,center_indices_i,center_indices_j,
 def lattice_mixture_monte_carlo(dim,N_cellPerEdge,vFrac,beta,
                                 w_AA,w_BB,w_AB,
                                 max_it,S_frac_tol,
-                                initialization='random',check_interval=1000):
-    N_cellTotal = int(np.power(N_cellPerEdge,dim))
+                                initialization='random',check_interval=1000,
+                                print_conv='no'):
     """
     ---Inputs---
     S_frac_tol : {float}
@@ -327,6 +333,8 @@ def lattice_mixture_monte_carlo(dim,N_cellPerEdge,vFrac,beta,
     if ((S_frac_tol < 0) or (S_frac_tol >1)):
         print(f'ERROR: S_frac_tol must be in range (0,1)')
         return
+
+    N_cellTotal = int(np.power(N_cellPerEdge,dim))
 
     # generate intialization
     if (initialization == 'random'):
@@ -340,7 +348,7 @@ def lattice_mixture_monte_carlo(dim,N_cellPerEdge,vFrac,beta,
                                + [0]*N_rightPad)
         lattice = latticeFlat.reshape([N_cellPerEdge]*dim)
 
-    # check if lattice is all one type
+    # check if lattice has single microstate
     if (np.sum(lattice) in [0,1,N_cellTotal-1,N_cellTotal]):
         # all lattice microstates have equal energy, energy always
         # same, so don't run any Monte Carlo steps, just compute
@@ -352,14 +360,14 @@ def lattice_mixture_monte_carlo(dim,N_cellPerEdge,vFrac,beta,
 
     deltaEVec = np.array([0.0]) # array of E(cur_iteration) - E_0
     it = 0 # iteration counter
-    S_per = 100000 # percentage error in mean (dummy value)
+    S_frac = 100000 # percentage error in mean (dummy value)
     # get arrays of shape (N_x,dim) containing indices of site types
     A_sites = np.vstack(np.where(lattice == 0)).T
     B_sites = np.vstack(np.where(lattice == 1)).T
     N_A = A_sites.shape[0]
     N_B = B_sites.shape[0]
     N_cellTotal = N_A + N_B
-    while ((it < max_it) and (S_per > S_frac_tol)):
+    while ((it < max_it) and (S_frac > S_frac_tol)):
         # select site i (A type) and j (B type) at random, these are
         # environment centers
         # (always swapping sites of different types)
@@ -394,7 +402,9 @@ def lattice_mixture_monte_carlo(dim,N_cellPerEdge,vFrac,beta,
             E_mean = np.mean(EVecTemp) # mean energy
             sigma_E = np.std(EVecTemp) # standard deviation of energy
             S = sigma_E/np.sqrt(it) # standard error of mean
-            S_per = np.abs(S/E_mean) # approximate percentage error of mean
+            S_frac = np.abs(S/E_mean) # approximate percentage error of mean
+            if (print_conv == 'yes'):
+                print(f'  S_frac : {S_frac}')
             
     # add deltas to original value
     EVec = E_0*np.ones(deltaEVec.shape) + deltaEVec
