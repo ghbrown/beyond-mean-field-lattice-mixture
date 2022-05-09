@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99d (TeX Live 2022/Arch Linux)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: Beyond mean field solutions - G. H. Brown.aux
+The style file: plain.bst
+Database file #1: references.bib
+You've used 6 entries,
+            2118 wiz_defined-function locations,
+            530 strings with 4819 characters,
+and the built_in function-call counts, 1498 in all, are:
+= -- 137
+> -- 75
+< -- 0
++ -- 30
+- -- 24
+* -- 80
+:= -- 281
+add.period$ -- 18
+call.type$ -- 6
+change.case$ -- 27
+chr.to.int$ -- 0
+cite$ -- 6
+duplicate$ -- 66
+empty$ -- 118
+format.name$ -- 24
+if$ -- 303
+int.to.chr$ -- 0
+int.to.str$ -- 6
+missing$ -- 9
+newline$ -- 33
+num.names$ -- 12
+pop$ -- 35
+preamble$ -- 1
+purify$ -- 24
+quote$ -- 0
+skip$ -- 43
+stack$ -- 0
+substring$ -- 30
+swap$ -- 6
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 18
+warning$ -- 0
+while$ -- 12
+width$ -- 7
+write$ -- 67

@@ -62,22 +62,22 @@ The approximate Bragg-Williams solution to the binary lattice mixture model is b
 Direct consequences of this approximate model include the regular solution model, which itself provides an entry point to the study of phase separation \cite{dill}.
 Therefore, a more accurate solution to the binary lattice mixture model could provide better models for physical phenomena in statistical and classical thermodynamics.
 In the present paper we venture to create such an improved model via semi-emperical means.
-An algorithm, called the ``Metropolis algorithm for lattice mixtures'' is developed and used to generate a data set over the parameter space of variables on which the internal energy per site $\hat{U}$ [eV site$^{-1}$] depends.
-Using this data set together with physical insights into the data and physical and symmetry constraints on the functinal form of $U$, an emperical form is proposed and numerically fit.
+An algorithm, called the ``Metropolis algorithm for lattice mixtures'' is developed and used to generate a data set over the parameter space of variables on which the internal energy per site $\hat{U}$ (units eV site$^{-1}$) depends.
+Using this data set together with physical insights into the data and physical and symmetry constraints on the functional form of $\hat{U}$, and multiple analytical forms are proposed and emperically fit.
 
 
 \section{Lattice model of a mixture} 
 
 \subsection{Basics}
 A mixture of two condensed (liquid or solid) phases $A$ and $B$ may be crudely described by a single-degree-of-freedom-per-site lattice model with uniform coordination number $z$, meaning that each lattice site has $z$ nearest neighbors. \footnote{The present model formulation of a mixture on a lattice follows closely to \cite{dill}, with minor modifications including my own motivations and explanations.} 
-Restricting the energetic interactions to nearest neighbor pairwise, there are three energetic constants for $A-A$, $B-B$, and $A-B$ interactions, respectively: $w_{AA}, \; w_{BB}, \; w_{AB}$, which may be generically positive, negative, or zero.
+Restricting the energetic interactions to nearest neighbor pairwise, there are three energetic constants for $A$-$A$, $B$-$B$, and $A$-$B$ interactions, respectively: $w_{AA}, \; w_{BB}, \; w_{AB}$, which may be generically positive, negative, or zero.
 Let $W$ represent a realization or configuration of the lattice, uniquely specifying the occupation of each site as $A$ or $B$.
 The total internal energy $U$ of such a configuration is then given by
 \begin{align}
     U(W) = m_{AA} w_{AA} + m_{BB} w_{BB} + m_{AB} w_{AB}
 \end{align}
-where $m_{XY}$ is the number of $X-Y$ interactions in the system.
-Restricting to finite periodic lattice of $N$ total sites with $N_A$ $A$ sites and $N_B$ $B$ sites (uniquely defining a $B$ volume fraction $x = N_B / N$), one can further define the $m_{XY}$s.
+where $m_{XY}$ is the number of $X$-$Y$ interactions in the system.
+Restricting to finite periodic lattice of $N$ total sites with $N_A$ sites of type $A$ and $N_B$ sites of type $B$ (uniquely defining a $B$ volume fraction $x = N_B / N$), one can find relationships between the quantities $m_{XY}$.
 Since each pairwise interaction involved two sites, the total number of interactions for a periodic lattice with $N$ sites and coordination $z$ is
 \begin{align}
     m_{AA} + m_{BB} + m_{AB} = \frac{z N}{2} = \frac{z}{2} \left( N_A + N_B \right),
@@ -87,15 +87,16 @@ further,
     \frac{z N_A}{2} = m_{AA} + \frac{m_{AB}}{2}, \quad\quad
     \frac{z N_B}{2} = m_{BB} + \frac{m_{AB}}{2}.
 \end{align}
-With $N$ and $x=N_B/N$ (equivalently $N_A$ and $N_B$) being known system constants, this model is nearly analytical apart from the unknown value of $m_{AB}$. \footnote{Realistic physical systems are often so large that it is more convenient to work in terms of densities like $N/V$, but since we will be interacting intimately with the lattice description, we maintain use of $N$ directly.} \footnote{One could also treat $m_{AA}$ or $m_{BB}$ as unknowns, the three $m_{X}$s are algebraically related such that one of the three uniquely defines the others.}
+With $N$ and $x=N_B/N$ (equivalently $N_A$ and $N_B$) being known system constants, this model is nearly analytical apart from the unknown value of $m_{AB}$.\footnote{Note that the $B$ volume fraction is explicitly constant. This is different than the Ising magnet which has no constraint on the number of spin up and spin down sites on the lattice (or their ratio).}
+\footnote{Realistic physical systems are often so large that it is more convenient to work in terms of densities like $N/V$, but since we will be interacting intimately with the lattice description, we maintain use of $N$ directly.} \footnote{One could also treat $m_{AA}$ or $m_{BB}$ as unknowns, the three $m_{X}$s are algebraically related such that one of the three uniquely defines the others.}
 
 \subsection{Approximate solution}
-To keep such a lattice model analytical, we use the Bragg-Williams mean field approximation, which posits that the $A$ and $B$ sites are randomly distributed throughout the lattice \cite{flory}.
+A common tactic to keep this simple model analytical is to use employ the Bragg-Williams mean field approximation, which posits that the $A$ and $B$ sites are randomly distributed throughout the lattice \cite{flory}.
 One can then approximate that $A$ sites have on average $z N_B / N$ neighboring $B$ sites, and the corresponding approximation for $m_{AB}$ is
 \begin{equation}
     m_{AB} \approx \frac{z N_A N_B}{N} = z N (1-x) x.
 \end{equation}
-The standard way of writing the total energy of this model is
+The standard form of the internal energy under this model is
 \begin{align}
     U &=
     \frac{z w_{AA}}{2} N_A +
@@ -135,13 +136,13 @@ Since the Bragg-Williams approximation is essentially the assumption of random m
 \section{Computational Scheme}
 
 The naive computation of $U$ using Equation \ref{eqn:macrostate_energy} requires the evaluation of the total energy for each of a factorial number of microstates. \footnote{For a lattice with $N$ atoms the number of microstates is $\frac{N!}{N_A!N_B!}$.}
-Not only is the number of microstates quickly intractable, but each total lattice evaluation has cost proportional to the number of sites $N$. 
+Not only does the number of microstates quickly become intractable, but each total lattice evaluation has cost proportional to the number of sites $N$. 
 Additionally, storing exponentially large intermediate values for $Q$ and the summand in Equation \ref{eqn:macrostate_energy} is often necessary (even if $U$ and the number of microstates are only modest) which poses problems for modern computers.
 Therefore, it is necessary to seek and employ an alternative scheme for computing observables of the proposed lattice model.
 
 \subsection{Metropolis-style algorithm for lattice mixtures}
 An efficient and accurate scheme to solve this problem is the Metropolis algorithm, a Markov chain Monte Carlo method to compute (in this case) an expected value \cite{md} \cite{metropolis_hastings}.
-The iterates of the algorithm form a Markov chain, with dependence only on the previous iterate, and taking the unweighted mean quantity $R$ evaluated at each of these iterates provides an increasly accurate approximation for the mean of $R$.
+The iterates of the algorithm form a Markov chain, with dependence only on the previous iterate, and taking the unweighted mean of quantity $R$ evaluated at each of these iterates provides an increasly accurate approximation for the mean of $R$.
 Here, we are interested in $R=E$, and one can see that $U$ may be interpreted as an expected value by inspecting the central portion of Equation \ref{eqn:macrostate_energy}.
 Furthermore, the original paper by Metropolis, Rosenbluth, Rosenbluth, Teller, and Teller also details an algorithm for applying this method to systems of discrete particles in continuous space.
 We present a version of this algorithm adapted to the discrete lattice mixture case, which we call the ``Metropolis algorithm for lattice mixtures'' (MALM).
@@ -186,13 +187,13 @@ Now give sites $i,j$ and corresponding $a_i,b_j$, we can partition $E_{\text{cur
     E_{\text{proposed}} &= \frac{1}{2} \sum_{k \ne i,j}^N E_{env}(k,s_k) +
     \frac{1}{2} E_{env}(i,b_j) + \frac{1}{2} E_{env}(i,a_i).
 \end{align}
-Now noting that $P_{\text{accept}}$ depends only on the diffence between the current and proposed energies, one can compute $P_{\text{accept}}$ in a total of four environment evaluations.
+Now, noting that $P_{\text{accept}}$ depends only on the diffence between the current and proposed energies, one can compute $P_{\text{accept}}$ in a total of four environment evaluations.
 It then suffices to compute the energy of the full lattice (denoted $E_0$ once at the beginning, and keep track of the energetic changes with respect to $E_0$ thereafter. \footnote{There is additional difficulty in properly handling the case case where $i,j$ are adjacent to each other in the lattice, since then their environments cannot be treated as frozen, but must be updated for the proposed swap case.
 Although the chance of such an event decreases with increasing system size, it invariably causes disastrous results due to the number of Monte Carlo steps.
 The author's implementation of MALM properly handles such edge cases.}
 For $T$ steps of the algorithm, this optimization reduces the complexity from $\mathcal{O}(TN)$ to $\mathcal{O}(N+T)$, which is especially impactful as often thousands or hundreds of thousands of Monte Carlo steps are done in practice.
 
-Other impactful optimizations include:
+Other impactful computational optimizations include:
 \begin{itemize}
 \item the choice of scheme for subroutine \texttt{select\_ij} in the MALM algorithm (discussion and empirical results in the Appendix motivate enforcing the two randomly selected lattice sites to have different types ($a_i \ne b_j$)),
 \item (in light of the the above optimization) using lists to track and update the location of $A$ and $B$ sites each iteration, for faster random selection of site indices $i,j$,
@@ -210,12 +211,12 @@ Specifically, termination occurs when
 \end{align}
 where $S_{U}$ is the relative error in the internal energy, $\sigma_{U}$ is the standard deviation of the computed energies, and $T$ is the number of Monte Carlo iterations (steps).
 The variable $\tau$ is the user specified tolerance, with $\tau = 0.01$ being 1\% error in the average internal energy.
-Emperically, a value of $\tau = 50 \times 10^{-6}$ was found to give well converged results.
+Emperically, a value of $\tau = 5 \times 10^{-5}$ was found to give well converged results.
 
 Though the aformentioned metric is relatively simple and robust, some troublesome systems converge slowly numerically, even though they are well converged in reality.
 For example, a $d=1, L=5, x=0.4$ system has only two microstates, which it can randomly switch between at high temperature.
-This gave emperically slow convergence, even though though the average energy converged to the true value rather quickly, and therefore a maximum iteration count $N_{it max}$ was also implemented and used.
-Emperically, a value of $N_{it max} = 200 \times 10^3$ was found to give satisfactory looking convergence curves even when convergence was slow under the relative error metric.
+This gave emperically slow convergence, even though the average energy converged to the true value rather quickly, and therefore a maximum iteration count $T_{\text{it max}}$ was also implemented and used.
+Emperically, a value of $T_{\text{it max}} = 200 \times 10^3$ was found to give satisfactory looking convergence curves even when convergence was slow under the relative error metric.
 
 
 \section{Results}
@@ -243,20 +244,20 @@ The corresponding convergence plot (Figure \ref{fig:melted_convergence} in the A
 \centering
 \includegraphics[width=0.65\textwidth]{Figures/verification_melted_lattice.png}
 \caption{``Melted'' state of originally ordered lattice at low coldness (high temperature).
-Disorder dominates even though $A$-$A$ and $B$-$B$ are energetically favorable relative to $A-B$.}
+Disorder dominates even though $A$-$A$ and $B$-$B$ are energetically favorable relative to $A$-$B$.}
 \label{fig:melted_lattice}
 \end{figure}
 
 Second, we show that the method produces highly ordered results when the system is cold and $w_{AB} > w_{AA},w_{BB}$, even if the initial state is entirely random.
 Again $d=2 (z=4)$, $L=100$, $x=0.5$,  $w_{AA}=-1$ eV, $w_{BB} = -1$ eV, and $w_{AB} = -0.5$, however now $\beta = 100$ eV$^{-1}$ ($T=116$ K). meaning that the system should energetically prefer minimizing $A$-$B$ contacts.
 At such a low temperature, the system should attempt to minmize $A$-$B$ contacts, since they are the least energetically favorable (most positive).
-Indeed, even when the lattice is initially random, the system tends to an ordered state with long range order, as shown in Figure \ref{fig:frozen_lattice}
-Again, the accompanying convergence plot (Figure \ref{fig:frozen_convergence}) is in the Appendix, and shows 
+Indeed, even when the lattice is initially random, the system tends to an ordered state with long range order, as shown in Figure \ref{fig:frozen_lattice}.
+Again, the accompanying convergence plot (Figure \ref{fig:frozen_convergence}) is in the Appendix, and shows steady convergence toward a lower energy state, as expected.
 
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.65\textwidth]{Figures/verification_frozen_lattice.png}
-\caption{``Frozen'' state of originally random lattice at low coldness (high temperature).
+\caption{``Frozen'' state of originally random lattice at high coldness (low temperature).
 Order dominates, following physical intuition.}
 \label{fig:frozen_lattice}
 \end{figure}
@@ -265,10 +266,10 @@ Order dominates, following physical intuition.}
 To visualize the dependence of $\hat{m}_{AB}$ on the system parameters $z,x,\beta,w_{AA},w_{BB},w_{AB}$, we perform plots meshing over each of these parameters, while holding the others constant at $z=4$ ($d = 2$), $x = 0.5$, $\beta = 38.7$ eV$^{-1}$ ($T = 300$ K), $w_{AA} = -1.0$ eV, $w_{BB} = 1.0$ eV, $w_{AB} = -0.5$ eV.
 These plots are collected in Figures \ref{fig:m_AB_hat_versus_z} - \ref{fig:m_AB_hat_versus_w_AB}, respectively.
 
-For this system the Bragg-Williams approximation gives $\hat{m}_{AB} = 4*\left(1-\frac{1}{2}\right) \frac{1}{2} = 1$ (unless $z$ or $x$ are varied).
+For this system the Bragg-Williams approximation gives $\hat{m}_{AB} = 4 \left(1-\frac{1}{2}\right) \frac{1}{2} = 1$ (unless $z$ or $x$ are varied).
 Comparing this value to the computed results in the following figures shows how the Bragg-William approximation can deviate from reality.
 
-Figure \ref{fig:m_AB_hat_versus_z} shows a nearly linear relationship between $z$ and $\hat{m}_{AB}$ for the test system. \footnote{It is difficult to ascertain the functional form of the dependence with only three points, but this dependence is expected to be linear, as we justify in the next section.} 
+Figure \ref{fig:m_AB_hat_versus_z} shows a nearly linear relationship between $z$ and $\hat{m}_{AB}$ for the test system.\footnote{It is difficult to ascertain the functional form of the dependence with only three points, but this dependence is expected to be linear, as we justify in the next section.} 
 Figure \ref{fig:m_AB_hat_versus_x} shows a nonlinear relationship between $z$ and $\hat{m}_{AB}$ for the test system.
 Figure \ref{fig:m_AB_hat_versus_beta} displays a sharp transition between just above $\beta = 1$. For very cold systems this configuration minimizes $B$-$B$ interactions in favor of $A$-$B$ interactions, with less preference for $A$-$B$ interactions in system with low coldness (high temperature).
 Figure \ref{fig:m_AB_hat_versus_w_AA} shows almost no dependence of $m_{AB}$ on $w_{AA}$, with the present variations likely due to noise.
@@ -327,29 +328,32 @@ Also, note that all treatment of the model is done on a per-site basis, so the e
 Table \ref{tbl:param_ranges} lists the possible ranges for each of the seven parameters used when generating sample data points.
 The spatial dimension $d$ covers all common model dimensions for physical systems.
 As mentioned above, the side lattice side length $L$ was chosen to mix small lattices that almost certainly converge to the proper energy with larger lattices at the edge of the computational limit that better represent real physical systems.
-The $B$ volume fraction $x$ only varies between 0 and 0.5 because the system is symmetric under a relabeling of $A \leftrightarrow B, w_AA \leftrightarrow w_BB$.
+The $B$ volume fraction $x$ only varies between 0 and 0.5 because the system is symmetric under a relabeling of $A \longleftrightarrow B, w_AA \longleftrightarrow w_BB$.
 The interactions strengths were chosen with reference to real physical systems like water with hydrogen bonds of strength -0.24 eV and liquid argon (a common molecular dynamics model system) with equilibrium interaction -0.01 eV \cite{water} \cite{argon}.
 The range for temperature $T$ goes from absolute zero to one million Kelvin, which is approximately the point at which the thermal energy scale $k_B T$ is equal to that of the the interaction energy scale defined by $w_XY$.
 
 The points to at which MALM was used to solve the system include all $2^7$ vertices of the hypercube defined by the extreme values of the parameters in Table \ref{tbl:param_ranges}, in addition to 1000 random points from the interior of the hypercube.
-At each of these 1128 points, the internal energy $U$ was computed using MALM, with termination at $200 \times 10^3$ iterations or $\hat{S}_{\bar{U}} < 5 \times 10^{-5}$ (whichever came first).
+At each of these 1128 points, the internal energy $U$ was computed using MALM, with termination at $200 \times 10^3$ iterations or $S_{U} < 5 \times 10^{-5}$ (whichever came first).
 For all points the lattice was initialized as a random lattice of the specified $B$ volume fraction $x$.
 This raw data consisting of points like $(d,x,L,T,w_{AA},w_{BB},w_{AB},U)$, was then processed to generate corresponding points $(z,x,\beta,w_{AA},w_{BB},w_{AB},\hat{m}_{AB})$.
 
-\begin{center}
-\begin{tabular}{c | l | l | l} 
-    \hline
-    Parameter & Possible Values & Grid spacing & Units \\  \hline
-    $d$ & $\mathbb{Z} \in \{1,2,3\}$ & discrete & not applicable \\ \hline
-    $L$ & $\mathbb{Z} \in [5,100]$ & discrete & not applicable \\ \hline
-    $x$ & $\mathbb{R} \in [0.0,0.5)$ & linear & not applicable \\ \hline
-    $T$ & $\mathbb{R} \in [1.0 \times 10^{-3},1.0 \times 10^6]$ & logarithmic & K \\ \hline
-    $w_{AA}$ & $\mathbb{R} \in [-1.0, 1.0]$ & linear & eV \\ \hline
-    $w_{BB}$ & $\mathbb{R} \in [-1.0, 1.0]$ & linear & eV \\ \hline
-    $w_{AB}$ & $\mathbb{R} \in [-1.0, 1.0]$ & linear & eV \\
-    \label{tbl:param_ranges}
-\end{tabular}
-\end{center}
+\begin{table}[h!]
+    \caption{Sampling scheme for parameter space.}
+    \begin{center}
+    \begin{tabular}{c | l | l | l} 
+        \hline
+        Parameter & Possible Values & Grid spacing & Units \\  \hline
+        $d$ & $\mathbb{Z} \in \{1,2,3\}$ & discrete & not applicable \\ \hline
+        $L$ & $\mathbb{Z} \in [5,100]$ & discrete & not applicable \\ \hline
+        $x$ & $\mathbb{R} \in [0.0,0.5)$ & linear & not applicable \\ \hline
+        $T$ & $\mathbb{R} \in [1.0 \times 10^{-3},1.0 \times 10^6]$ & logarithmic & K \\ \hline
+        $w_{AA}$ & $\mathbb{R} \in [-1.0, 1.0]$ & linear & eV \\ \hline
+        $w_{BB}$ & $\mathbb{R} \in [-1.0, 1.0]$ & linear & eV \\ \hline
+        $w_{AB}$ & $\mathbb{R} \in [-1.0, 1.0]$ & linear & eV
+        \label{tbl:param_ranges}
+    \end{tabular}
+    \end{center}
+\end{table}
 
 
 \section{Model Construction}
@@ -405,7 +409,7 @@ The model function should also be strictly positive.
 We present here a collection of possible model functions, all of which satisfy the aforementioned constraints.
 For simplicity we call $f_{\hat{m}_{AB},X}$ ``model function'' X.
 
-Model function 1 has no free parameters, and prepends a multiplicative Fermi-distribution-like term. \footnote{These functions are in no particular order, or rather, they are in chronological order of when I constructed and fit them.}
+Model function 1 has no free parameters, and prepends a multiplicative Fermi-distribution-like term.\footnote{These functions are in no particular order, or rather, they are in chronological order of when I constructed and fit them.}
 
 \begin{align}
     f_{\hat{m}_{AB},1} = 
@@ -421,7 +425,7 @@ Model function 2 expands upon model function 1, inserting four tunable parameter
     z (1-x) x
 \end{align}
 
-Model function 3 dispenses with the constraint of linearity in $z$, permitting the power of $z$ to be a parameter. \footnote{More discussion follows in the next section, but we note here that the optimal value of parameter $a_3$ is $0.98$, lending credence to the linear assumption.
+Model function 3 dispenses with the constraint of linearity in $z$, permitting the power of $z$ to be a parameter.\footnote{More discussion follows in the next section, but we note here that the optimal value of parameter $a_3$ is $0.98$, lending credence to the linear assumption.
 Therefore no further investigations into $z$ depedence are performed.}
 
 \begin{align}
@@ -434,29 +438,34 @@ For each of the presented model functions, we compute the optimal model paramete
 Model function 1, and its parameterized exension 2 inject the proper Fermi-distribution like dependence, but their poor performance can likely be attributed entirely to one shortcoming: the Fermi-function goes to $0$ in the high coldness (low temperature) limit, giving a prediction of $f_{\hat{m}_{AB}} = 0$, which itself is not physically realizable, since there must always be an $A$-$B$ contact unless $x=0,1$.
 However, it is clear that parameterization can effectively reduce the average residual, by comparing model functions 1 and 2.
 
-Model function 3, which purposefully violates the linearity assumption in $z$, confirms the linearity assumption, since the exponent $a_3$ is nearly 1.0. Strangely, the error of the optimal exponent is greater than the Bragg-Williams model function (of which it is a generalization). This behavior persists, even when the fitting process is started with $a_3 = 1.0$, implying that the residual increases during the fitting process. \footnote{I am using SciPy's fitting library, so any implementation errors are not my own.}
+Model function 3, which purposefully violates the linearity assumption in $z$, confirms the linearity assumption, since the exponent $a_3$ is nearly 1.0. Strangely, the error of the optimal exponent is greater than the Bragg-Williams model function (of which it is a generalization). This behavior persists, even when the fitting process is started with $a_3 = 1.0$, implying that the residual increases during the fitting process.\footnote{I am using SciPy's fitting library, so any implementation errors are not my own.}
 
-\begin{center}
-\begin{tabular}{c | c | l} 
-    \hline
-    Model function & Optimal parameters, $\mathbf{v}^*$ & Mean residual \\  \hline
-    Bragg-Williams & --- & 0.107 \\ \hline
-    1 & --- & 0.373 \\ \hline
-    2 & $a_2=684 \times 10^3, b_2=94.2 \times 10^3, c_2=d_2=0.328$ & 0.198 \\ \hline
-    3 & $a_3 = 0.981$ & 0.1129 \\
-    \label{tbl:model_errors}
-\end{tabular}
-\end{center}
+\begin{table}[h!]
+    \caption{Optimal model functions and their respective error.}
+    \begin{center}
+    \begin{tabular}{c | c | l} 
+        \hline
+        Model function & Optimal model parameters, $\mathbf{v}^*$ & Mean residual \\  \hline
+        Bragg-Williams & --- & 0.107 \\ \hline
+        1 & --- & 0.373 \\ \hline
+        2 & $a_2=684 \times 10^3, b_2=94.2 \times 10^3, c_2=d_2=0.328$ & 0.198 \\ \hline
+        3 & $a_3 = 0.981$ & 0.1129
+        \label{tbl:model_errors}
+    \end{tabular}
+    \end{center}
+\end{table}
 
 
 \section{Conclusion}
+
 A computational workflow was presented to generate more accurate models for binary lattice mixtures.
 The Metropolis algorithm for lattice mixtures (MALM) was developed, implemented, optimized, and verified experimentally.
 MALM was then applied to a selected points in the free parameter space of the lattice mixture model, which generates a data set that can be used to test and new analytical models for the unknown component $\hat{m}_{AB}$ in the expression of the internal energy per site.
 Various physical constraints on model functions for the approximation of $\hat{m}_{AB}$ were given, and multiple example model functions obeying these constraints were constructed, fit, and evaluated.
 Regrettably, none of the current model functions outperform the Bragg-Williams model function.
-However, this is almost certainly because a suitable model function has not yet been constructed, since clear evidence is for sizable errors in the Bragg-Williams approximation.
+However, this is almost certainly because a suitable model function has not yet been constructed, since we present clear evidence of sizable errors in the Bragg-Williams approximation.
 Furture work on this problem includes the generation and testing of more model functions, as well as formulating the problem in a non-dimensional manner to reduce the number of free parameters and increase generality of the final results.
+Finally, connections between the proposed approach and existing ``higher order'' methods for mixtures in literature may also be made.
 
 
 \clearpage
@@ -474,12 +483,21 @@ In that sense, the figure below gives the ``swap any two'' scheme the best chanc
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.65\textwidth]{Figures/swap_any_two_convergence.png}
-\includegraphics[width=0.65\textwidth]{Figures/swap_A_B_only_convergence.png}
-\caption{Internal energy versus iteration with $L=100$, $d=2$, $x=0.5$, $\beta=0.1$, $w_{AA}=w_{AB}=-10 \times 10^{-3},w_{BB} = -30 \times 10^{-3}$ eV; both simulations were run until the percentage error in the mean energy was less than 0.005\%.
-The upper figure is when swaps may exchange any two sites (independent of their types), while the bottom figure permits exchanges only between A and B sites.}
-\label{fig:swap}
+\caption{Internal energy versus iteration with $L=100$, $d=2$, $x=0.5$, $\beta=0.1$, $w_{AA}=w_{AB}=-10 \times 10^{-3},w_{BB} = -30 \times 10^{-3}$ eV; simulation was run until the relative error in the mean energy was less than $5 \times 10^{-5}$.
+Here swaps may exchange any two sites (independent of their types)}
+\label{fig:swap_any}
 \end{figure}
 
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.65\textwidth]{Figures/swap_A_B_only_convergence.png}
+\caption{Internal energy versus iteration with the same parameters and convergence condition as the previous figure.
+Here swaps may only exchange sites of different types.}
+\label{fig:swap_different}
+\end{figure}
+
+
+\clearpage
 \subsection{Convergence of verification runs}
 
 \begin{figure}[h!]
@@ -503,7 +521,6 @@ The low variations throughout characterize the high coldness (lower temperature)
 
 \clearpage
 \bibliography{references.bib}
-References (USE BIBTEX THOUGH)
 
 
 \end{document}

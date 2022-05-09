@@ -1,0 +1,36 @@
+\begin{thebibliography}{1}
+
+\bibitem{water}
+Martin Chaplin.
+\newblock Water's hydrogen bond strength.
+\newblock {\em arXiv}, 2007.
+
+\bibitem{dill}
+Ken~A. Dill and Sarina Bromberg.
+\newblock {\em Molecular Driving Forces: Stastical Thermodynamics in Chemistry
+  and Biology}.
+\newblock Garland Science (Taylor \& Francis Group), New York and London, 2003.
+
+\bibitem{flory}
+Paul~J. Flory.
+\newblock {\em Principles of Polymer Chemistry}.
+\newblock Cornell University Press, New York, 1953.
+
+\bibitem{md}
+Daan Frenkel and Berend Smit.
+\newblock {\em Understanding Molecular Simulation}.
+\newblock Academic Press, California and London, 2002.
+
+\bibitem{metropolis_hastings}
+Nicholas Metropolis, Arianna~W. Rosenbluth, Marhall~N. Rosenbluth, Augusta~H.
+  Teller, and Edward Teller.
+\newblock Equations of state calculations by fast computing machines.
+\newblock {\em Journal of Chemical Physics}, 21, 1953.
+
+\bibitem{argon}
+John~A. White.
+\newblock Lennard-jones as model for argon and test of extended renormalization
+  group calculations.
+\newblock {\em Journal of Chemical Physics}, 111, 1999.
+
+\end{thebibliography}
