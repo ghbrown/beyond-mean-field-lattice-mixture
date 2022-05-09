@@ -78,18 +78,7 @@ further,
     \frac{z N_A}{2} = m_{AA} + \frac{m_{AB}}{2}, \quad\quad
     \frac{z N_B}{2} = m_{BB} + \frac{m_{AB}}{2}.
 \end{align}
-With $N$ and $x=N_B/N$ (equivalently $N_A$ and $N_B$) being known system constants, this model is nearly analytical apart from the unknown value of $m_AB$. \footnote{Realistic physical systems are often so large that it is more convenient to work in terms of densities like $N/V$, but since we will be interacting intimately with the lattice description, we maintain use of $N$ directly.} \footnote{One could also treat $m_{AA}$ or $m_{BB}$ as unknowns, the three $m_{\cdot}$ are algebraically related sucht that one of the three uniquely defines the others.}
-
-\section{Computational Implementation}
-discuss Metropolis Monte Carlo algorithm (cite MD book)
-
-discuss energy decomposition trick to make each update step
-
-discuss relaxation scheme
-
-discuss forcing every step to exchange A and B
-
-discuss convergence tolerance
+With $N$ and $x=N_B/N$ (equivalently $N_A$ and $N_B$) being known system constants, this model is nearly analytical apart from the unknown value of $m_{AB}$. \footnote{Realistic physical systems are often so large that it is more convenient to work in terms of densities like $N/V$, but since we will be interacting intimately with the lattice description, we maintain use of $N$ directly.} \footnote{One could also treat $m_{AA}$ or $m_{BB}$ as unknowns, the three $m_{\cdot}$ are algebraically related sucht that one of the three uniquely defines the others.}
 
 
 \subsection{Approximate solution}
@@ -146,17 +135,23 @@ where the sum runs over all possible microstates of the macrostate, and $k_B$ is
 %    \frac{\exp\left(\frac{-E_j}{k_B T}\right)}{\exp\left(\frac{-E_k}{k_B T}\right)}
 %    = \exp\left(\frac{-(E_j-E_k)}{k_B T}\right).
 %\end{align}
-
-The energy of a macrostate is
-\begin{align}
-    U = \sum_{i=1}^{N_{micro}} p_i E_i
-    = \frac{1}{Q} \sum_{i=1}^{N_{micro}} E_i \exp\left(\frac{-E_i}{k_B T}\right)
-\end{align}
+%The energy of a macrostate is
+%\begin{align}
+%    U = \sum_{i=1}^{N_{micro}} p_i E_i
+%    = \frac{1}{Q} \sum_{i=1}^{N_{micro}} E_i \exp\left(\frac{-E_i}{k_B T}\right)
+%\end{align}
 
 \section{Computational Model}
+[discuss Metropolis Monte Carlo algorithm (cite MD book)]
+
+[monte carlo (brief algorithm like MD book)]
+
+[discuss energy decomposition trick to make each update step]
+
+[discuss forcing every step to exchange A and B]
+
 order $d$ square array populated by integers $0, 1$, periodic boundary conditions
 
-monte carlo (brief algorithm like MD book)
 
 computational tricks
     convolution
@@ -164,20 +159,20 @@ computational tricks
     mention restriciting proposed exchanges (point to appendix)
 
 
-\subsection{Termination}
+\subsection{Termination and Convergence}
 The termination condition for error is on the approximate relative error of the mean energy $\bar{U}$.
 Using a relative error condition is especially important here, as this program will be used to simulate lattices of many different sizes and interactions strengths, where the average of energies may differ by orders of magnitude.
 Specifically, termination occurs when
 \begin{align}
     S_{\bar{U}} =
-    \frac{\sigma_{\hat{U}}}{\sqrt{N_{it}}} \frac{1}{\bar{U}}
+    \frac{\sigma_{U}}{\sqrt{N_{it}}} \frac{1}{\bar{U}}
     < \tau
 \end{align}
-where $S_{\bar{U}}$ is the relative error in the mean energy, $\sigma_{\hat{U}}$ is the standard deviation of the computed energy, and $N_{it}$ is the number of Monte Carlo iterations (steps).
+where $S_{\bar{U}}$ is the relative error in the mean energy, $\sigma_{U}$ is the standard deviation of the computed energies, and $N_{it}$ is the number of Monte Carlo iterations (steps).
 The variable $\tau$ is the user specified tolerance, with $\tau = 0.01$ being 1\% error in the average internal energy.
 Emperically, a value of $\tau = 50 \times 10^{-6}$ was found to give well converged results.
 
-Though the aformentioned metric is relatively simple and robuts, some systems converge very slowly numerically, even though they are well converged in reality.
+Though the aformentioned metric is relatively simple and robust, some troublesome systems converge slowly numerically, even though they are well converged in reality.
 For example, a $d=1, L=5, x=0.4$ system has only two microstates, which it can randomly switch between at high temperature.
 This gave emperically slow convergence, even though though the average energy converged to the true value rather quickly, and therefore a maximum iteration count $N_{it max}$ was also implemented and used.
 Emperically, a value of $N_{it max} = 200 \times 10^3$ was found to give satisfactory looking convergence curves even when convergence was slow under the relative error metric.
@@ -185,9 +180,73 @@ Emperically, a value of $N_{it max} = 200 \times 10^3$ was found to give satisfa
 For this 
 
 \section{Results}
+
+\section{Verification}
+Based on the values of $x,\beta,w_{AA},w_{BB},w_{AB}$ it is relatively simple to intuit the approximate structure of the equilibrium system.
+Systems with extremely small coldness $\beta$ maximize entropy, leading to nearly random systems.
+Meanwhile, very cold systems have equilibrium configurations that minimize the internal energy.
+Crudely, it will attempt to maximize the number of adjacent $C-D$ sites where $C-D$ here are given by the smallest of $w_{AA},w_{BB},w_{AB}$.
+
+First, we show that applying the computational method for low coldness converges to a random result, even when the starting configuration is ordered.
+
+Second, we show that the method produces highly ordered results when the system is cold and $w_{AB} > w_{AA},w_{BB}$, even if the initial state is entirely random.
+
 [confirm simulation works by looking at system that should be driven to disorder (starting ordered), and system that should be driven to order (starting disordered)]
 
-[some pretty 1-D and 2-D plots of normalized energy versus parameters]
+
+To visualize the dependence of $\hat{m}_{AB}$ on the system parameters $z,x,\beta,w_{AA},w_{BB},w_{AB}$, we perform plots meshing over each of these parameters, while holding the others constant at $z=4$ ($d = 2$), $x = 0.5$, $\beta = 38.7$ eV$^{-1}$ ($T = 300$ K), $w_{AA} = -1.0$ eV, $w_{BB} = 1.0$ eV, $w_{AB} = -0.5$ eV.
+
+Figures \ref{fig:m_AB_hat_versus_z} - \ref{fig:} contain these plots.
+Figure \ref{fig:m_AB_hat_versus_z} shows a sublinear relationship between $z$ and $\hat{m}_{AB}$ for the test system.
+Figure \ref{fig:m_AB_hat_versus_x} shows a nonlinear relationship between $z$ and $\hat{m}_{AB}$ for the test system.
+Figure \ref{fig:m_AB_hat_versus_beta} displays a sharp phase transition between just above $\beta = 1$. For very cold systems this configuration minimizes $B$-$B$ interactions in favor of $A$-$B$ interactions, with less preference for $A$-$B$ interactions in warmer systems (low coldness).
+Figure \ref{fig:m_AB_hat_versus_w_AA} shows almost no dependence of $m_{AB}$ on $w_{AA}$, with the present variation likely due to noise.
+Figure \ref{fig:m_AB_hat_versus_w_BB} shows another phase transition-like structure centered around $w_{BB}=0$ eV.
+By symmetry it's therefore likely that a similar dependence exists on $w_{AA}$, but perhaps it is not visible due to the asymmetry in the default values of the $w_{XY}$s.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.65\textwidth]{Figures/m_AB_hat_versus_z.png}
+\caption{Number of $A-B$ interactions per site versus lattice coordination number $z$.}
+\label{fig:m_AB_hat_versus_z}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.70\textwidth]{Figures/m_AB_hat_versus_x.png}
+\caption{Number of $A-B$ interactions per site versus $B$ volume fraction $x$.}
+\label{fig:m_AB_hat_versus_x}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.67\textwidth]{Figures/m_AB_hat_versus_beta.png}
+\caption{Number of $A-B$ interactions per site versus coldness $\beta = \frac{1}{k_B T}$.}
+\label{fig:m_AB_hat_versus_beta}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.70\textwidth]{Figures/m_AB_hat_versus_w_AA.png}
+\caption{Number of $A-B$ interactions per site versus $A-A$ interaction strength $w_{AA}$.}
+\label{fig:m_AB_hat_versus_w_AA}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.70\textwidth]{Figures/m_AB_hat_versus_w_BB.png}
+\caption{Number of $A-B$ interactions per site versus $B-B$ interaction strength $w_{BB}$.}
+\label{fig:m_AB_hat_versus_w_BB}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.70\textwidth]{Figures/m_AB_hat_versus_w_AB.png}
+\caption{Number of $A-B$ interactions per site versus $A-B$ interaction strength $w_{AB}$.}
+\label{fig:m_AB_hat_versus_w_AB}
+\end{figure}
+
+
 
 \section{Model Construction}
 [overall scheme: generate a bunch of data, then use nonlinear least squares to fit a new function for $\hat{U}$ or $\hat{w}_AB$]
@@ -200,6 +259,17 @@ The spatial dimension $d$ covers all common model dimensions for physical system
 The $B$ volume fraction $x$ only varies between 0 and 0.5 because the system is symmetric under a relabeling of $A \iff B, w_AA \iff w_BB$.
 The interactions strengths were chosen with reference to real physical systems like water with hydrogen bonds of strength -0.24 eV and liquid argon (a common molecular dynamics model system) with equilibrium interaction -0.01 eV \cite{water} \cite{argon}.
 The range for temperature $T$ goes from absolute zero to one million Kelvin, which is approximately the point at which the thermal energy scale $k_B T$ is equal to that of the the interaction energy scale defined by $w_XY$.
+
+\subsection{Model equation construction}
+[will need to satisfy some symmetry properties in $x, 1-x$ $w_{AA},w_{AB}$ etc.]
+
+[should have flat multiplier by $z$]
+
+[should have fermi-like transition centered around thermal/interaction transition]
+
+[should reduce to WHAT FORM? in the T=0 case]
+
+[should reduce to the Bragg-Williams approximation for $T \rightarrow \infty$]
 
 \begin{center}
 \begin{tabular}{c | l | l | l} 
@@ -230,7 +300,7 @@ Figure \ref{fig:swap} below shows how convergence (in terms of number of Monte C
 First, the ``transient'' or ``relaxation'' time (where the energy moves toward the equilibrium value) is about half the length, and the same error tolerance is achieved in about 70\% of the steps.
 The effect of this choice will be more exaggerated for extremely low and  high volume fractions $x$, where the ``swap any two'' scheme has a high probability of selecting a pair of the same type, whose exchange will not affect the internal energy.
 
-\begin{figure}[h]
+\begin{figure}[h!]
 \centering
 \includegraphics[width=0.49\textwidth]{Figures/swap_any_two_convergence.png}
 \includegraphics[width=0.49\textwidth]{Figures/swap_A_B_only_convergence.png}

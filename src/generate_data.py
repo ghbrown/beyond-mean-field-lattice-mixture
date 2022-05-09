@@ -14,9 +14,10 @@ def extreme_points(dim_range,L_range,x_range,T_range,
     grid_tuple = (dim_range,L_range,x_range,T_range,
                    w_AA_range,w_BB_range,w_AB_range)
     arrays = np.meshgrid(*grid_tuple)
+    elem_per_array = arrays[0].ravel().shape[0]
     # reshape into order 2 array of shape
     #   (n_vertices,number of parameters)
-    vertices_flat = np.reshape(arrays,(7,2**7)).T 
+    vertices_flat = np.reshape(arrays,(7,elem_per_array)).T 
     return vertices_flat
 
 

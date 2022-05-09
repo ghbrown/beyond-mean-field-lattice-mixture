@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from simulate import k_B
 
@@ -12,8 +11,14 @@ def join_extrema_and_random(extreme_file_name,random_file_name,
     df_random = pd.read_csv(random_file_name)
     frames = [df_extreme, df_random]
     df = pd.concat(frames,ignore_index=True)
-    df.columns = df.columns.str.strip()
     df.to_csv(output_file_name,index=False)
+
+
+def clean_column_names(file_name):
+    # clean spaces off file names
+    df = pd.read_csv(file_name)
+    df.columns = df.columns.str.strip()
+    df.to_csv(file_name,index=False)
 
 
 def to_int(file_name):
@@ -85,10 +90,10 @@ def add_m_AB_hat(file_name):
     """
     add number of AB interactions per site
     mapping from U -> m_AB has singularity when w_AA=w_BB=w_AB
-    giving m_AB_hat = inf (this is fixed in another step)
+    sometimes m_AB_hat = +/-inf, NaN (this is fixed in another step)
     """
     df = pd.read_csv(file_name)
-    U_hat_vec = df["U"].to_numpy()
+    U_hat_vec = df["U_hat"].to_numpy()
     z_vec = df["z"].to_numpy()
     x_vec = df["x_actual"].to_numpy()
     w_AA_vec = df["w_AA"].to_numpy()
@@ -99,18 +104,18 @@ def add_m_AB_hat(file_name):
     # compute m_AB_hat vector
     term_1 = (U_hat_vec -
               (z_vec/2)*((np.ones(n_points)-x_vec)*w_AA_vec +
-                         x_vec*w_BB_vec))
+                         x_vec*w_BB_vec)) # contains 0s
     term_2 = np.power(w_AB_vec -
                       0.5*(w_AA_vec + w_BB_vec),
-                      -1.0)
-    m_AB_hat_vec = term_1*term_2
+                      -1.0) # contains infs
+    m_AB_hat_vec = term_1*term_2 # contains +/- inf, NaN
     df["m_AB_hat"] = m_AB_hat_vec
     df.to_csv(file_name,index=False)
 
 
 def add_m_AB_hat_fixed(file_name):
     """
-    fixes m_AB_hat = inf cases
+    fixes m_AB_hat = +/-inf, NaN cases
     these cases occur when w_AA=w_BB=w_AB, which is consequently the
     same case when the lattice configuration doesn't matter (since
     all interactions have same strength) leading to random lattice
@@ -122,7 +127,7 @@ def add_m_AB_hat_fixed(file_name):
     m_AB_hat_fixed_vec = df["m_AB_hat"].to_numpy().copy()
     x_vec = df["x_actual"].to_numpy()
     for i_p,m_AB_hat in enumerate(m_AB_hat_fixed_vec):
-        if (np.isinf(m_AB_hat)):
+        if (np.isinf(m_AB_hat) or np.isnan(m_AB_hat)):
             m_AB_hat_fixed_vec[i_p] = (1 - x_vec[i_p])*x_vec[i_p]
     df["m_AB_hat_fixed"] = m_AB_hat_fixed_vec
     df.to_csv(file_name,index=False)
@@ -135,6 +140,7 @@ def build_fitting_data(processed_file_name,fitting_file_name):
     """
     # extract necessary columns
     df_proc = pd.read_csv(processed_file_name)
+    z        = df_proc["z"]
     x        = df_proc["x_actual"]
     beta     = df_proc["beta"]
     w_AA     = df_proc["w_AA"]
@@ -145,6 +151,7 @@ def build_fitting_data(processed_file_name,fitting_file_name):
 
     # construct fitting data frame
     df_fit = pd.DataFrame()
+    df_fit["z"]        = z
     df_fit["x"]        = x
     df_fit["beta"]     = beta
     df_fit["w_AA"]     = w_AA
@@ -156,6 +163,27 @@ def build_fitting_data(processed_file_name,fitting_file_name):
     df_fit.to_csv(fitting_file_name,index=False)
 
 
+def plot_process(file_name):
+    """
+    processes a file in place
+    NOTE: this is a no-no, so only using for plots, etc.
+          full data sets for fitting are processed properly
+    """
+    # computation of additional quantities from raw data
+    clean_column_names(file_name)
+    to_int(file_name)
+    add_z(file_name)
+    add_N(file_name)
+    add_beta(file_name)
+    add_x_actual(file_name)
+    add_U_hat(file_name)
+    add_m_AB_hat(file_name)
+    add_m_AB_hat_fixed(file_name)
+
+    # streamlined and renamed data for fitting routines
+    build_fitting_data(file_name,file_name)
+
+
 
 if (__name__ == "__main__"):
     # computation of additional quantities from raw data
@@ -164,6 +192,7 @@ if (__name__ == "__main__"):
     join_extrema_and_random('data/raw/extreme_point_data.txt',
                             'data/raw/random_point_data.txt',
                             processed_data_file)
+    clean_column_names(processed_data_file)
     to_int(processed_data_file)
     add_z(processed_data_file)
     add_N(processed_data_file)
