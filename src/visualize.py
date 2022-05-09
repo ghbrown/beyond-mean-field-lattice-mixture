@@ -35,6 +35,42 @@ n_grid = 10
 temp_file = 'data/working/temp_file'
 
 
+def plot_melted_lattice(max_it,S_frac_tol):
+    lattice,E_vec = lattice_mixture_monte_carlo(2,100,0.5,0.01,
+                                                -1,-1,-0.5,
+                                                max_it,S_frac_tol,
+                                                initialization='sorted',
+                                                check_interval=5000,
+                                                print_conv='yes')
+    plt.spy(lattice)
+    plt.axis('off')
+    plt.show()
+    plt.axis('on')
+
+    plt.plot(np.arange(1,E_vec.shape[0]+1),E_vec,color='black')
+    plt.xlabel(r'iteration count')
+    plt.ylabel(r'internal energy, $U$ [eV]')
+    plt.show()
+
+
+def plot_frozen_lattice(max_it,S_frac_tol):
+    lattice,E_vec = lattice_mixture_monte_carlo(2,100,0.5,100,
+                                                -1,-1,-0.5,
+                                                max_it,S_frac_tol,
+                                                initialization='random',
+                                                check_interval=5000,
+                                                print_conv='yes')
+    plt.spy(lattice)
+    plt.axis('off')
+    plt.show()
+    plt.axis('on')
+
+    plt.plot(np.arange(1,E_vec.shape[0]+1),E_vec,color='black')
+    plt.xlabel(r'iteration count')
+    plt.ylabel(r'internal energy, $U$ [eV]')
+    plt.show()
+
+
 
 def plot_m_AB_hat_versus_z(d_range,max_it,S_frac_tol):
     d_grid = np.array([1,2,3])
@@ -157,6 +193,13 @@ if (__name__ == "__main__"):
     max_it = int(200e3) # in case tolerance not met quickly
     S_frac_tol = 5e-5 # tolerance of error as fraction of mean
 
+
+    # melted lattice (should be largely random)
+    #plot_melted_lattice(max_it,S_frac_tol)
+
+    # frozen lattice (should be have long range structure)
+    #plot_frozen_lattice(max_it,S_frac_tol)
+
     # m_AB_hat versus z
     #plot_m_AB_hat_versus_z([1,3],max_it,S_frac_tol)
 
@@ -167,7 +210,7 @@ if (__name__ == "__main__"):
     #plot_m_AB_hat_versus_beta([0.001,1e6],max_it,S_frac_tol)
 
     # m_AB_hat versus w_AA
-    plot_m_AB_hat_versus_w_AA([-1.0,1.0],max_it,S_frac_tol)
+    #plot_m_AB_hat_versus_w_AA([-1.0,1.0],max_it,S_frac_tol)
 
     # m_AB_hat versus w_BB
     #plot_m_AB_hat_versus_w_BB([-1.0,1.0],max_it,S_frac_tol)
