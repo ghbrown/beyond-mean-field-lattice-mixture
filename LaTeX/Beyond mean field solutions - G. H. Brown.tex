@@ -57,6 +57,13 @@
 % computational approach
 % some extremum bounds
 
+\section{Introduction and motivation}
+The approximate Bragg-Williams solution to the binary lattice mixture model is both simple and useful, though one must take to stay within it's domain of applicability.
+Direct consequences of this approximate model include the regular solution model, which itself provides an entry point to the study of phase separation \cite{dill}.
+Therefore, a more accurate solution to the binary lattice mixture model could provide better models for physical phenomena in statistical and classical thermodynamics.
+In the present paper we venture to create such an improved model via semi-emperical means.
+An algorithm, called the ``Metropolis algorithm for lattice mixtures'' is developed and used to generate a data set over the parameter space of variables on which the internal energy per site $\hat{U}$ [eV site$^{-1}$] depends.
+Using this data set together with physical insights into the data and physical and symmetry constraints on the functinal form of $U$, an emperical form is proposed and numerically fit.
 
 
 \section{Lattice model of a mixture} 
@@ -123,17 +130,21 @@ The latter (approximate) solution has no true temperature dependence, and no dep
 In contrast, real statistical mechanical systems have clear dependence on temperature, occupying the ground microstate (microstate of minimal energy) in the low temperature limit, and occupying all microstates with equal probability in the high temperature limit.
 Since the Bragg-Williams approximation is essentially the assumption of random mixing, errors will be especially great when the system favors more ordered states (for example when $w_{AB}>w_{AA},w_{BB}$ at low temperatures).
 
-\section{Computational Model}
+
+
+\section{Computational Scheme}
 
 The naive computation of $U$ using Equation \ref{eqn:macrostate_energy} requires the evaluation of the total energy for each of a factorial number of microstates. \footnote{For a lattice with $N$ atoms the number of microstates is $\frac{N!}{N_A!N_B!}$.}
 Not only is the number of microstates quickly intractable, but each total lattice evaluation has cost proportional to the number of sites $N$. 
-Furthermore, storing exponentially large intermediate values for $Q$ and the summand in Equation \ref{eqn:macrostate_energy} is often necessary, even if $U$ is only modest, which poses problems for modern computers.
+Additionally, storing exponentially large intermediate values for $Q$ and the summand in Equation \ref{eqn:macrostate_energy} is often necessary (even if $U$ and the number of microstates are only modest) which poses problems for modern computers.
+Therefore, it is necessary to seek and employ an alternative scheme for computing observables of the proposed lattice model.
 
-An efficient and accurate scheme to solve this problem is the Metropolis algorithm, a Markov chain Monte Carlo method to compute (in this case) an expected value \cite{metropolis_hastings}.
+\subsection{Metropolis-style algorithm for lattice mixtures}
+An efficient and accurate scheme to solve this problem is the Metropolis algorithm, a Markov chain Monte Carlo method to compute (in this case) an expected value \cite{md} \cite{metropolis_hastings}.
 The iterates of the algorithm form a Markov chain, with dependence only on the previous iterate, and taking the unweighted mean quantity $R$ evaluated at each of these iterates provides an increasly accurate approximation for the mean of $R$.
 Here, we are interested in $R=E$, and one can see that $U$ may be interpreted as an expected value by inspecting the central portion of Equation \ref{eqn:macrostate_energy}.
 Furthermore, the original paper by Metropolis, Rosenbluth, Rosenbluth, Teller, and Teller also details an algorithm for applying this method to systems of discrete particles in continuous space.
-We present a version of this algorithm adapted to the discrete lattice mixture case.
+We present a version of this algorithm adapted to the discrete lattice mixture case, which we call the ``Metropolis algorithm for lattice mixtures'' (MALM).
 
 \begin{algorithm}[H]
     \SetAlgoLined
@@ -154,39 +165,50 @@ We present a version of this algorithm adapted to the discrete lattice mixture c
         }
     }
     %$U$ $\gets$ \texttt{mean(E\_values)}
-    \caption{Metropolis Algorithm for Lattice Mixtures}
+    \caption{Metropolis algorithm for lattice mixtures (MALM)}
+    \label{alg:malm}
 \end{algorithm}
 
+\subsection{Computational optimizations}
+As written, MALM automatically avoids the need to store exponentially large intermediates, but as written there are multiple outstanding choices to be made for its implementation.
+These choices can profoundly impact performance, so it is worthwhile to explain them in some detail.
 
-and accurate approach to approach 
+We begin the most impactful optimization, which we call energetic paritioning, that reduces the cost per Monte Carlo step from $\mathcal{O}(N)$ to $\mathcal{O}(1)$. \footnote{This optimization is present in Berend and Smit's presentation of the continuous space algorithm \cite{md}, I have adapted it to the lattice mixture case where it gives even larger speedups.}
+In Algorithm \ref{alg:malm} above, the calculation of $E_{X}$ is given directly by the total energy of the lattice
+\begin{align}
+    E = \frac{1}{2} \sum_{k=1}^N E_{env}(k,s_k)
+\end{align}
+where $E_{env}($ is the energy of the local environment (we take nearest neighbor) $k$ is the site index, and $t_k$ is the type ($A$ or $B$) at site $k$.
+Now give sites $i,j$ and corresponding $a_i,b_j$, we can partition $E_{\text{current}}$ and $E_{\text{proposed}}$ as
+\begin{align}
+    E_{\text{current}} &= \frac{1}{2} \sum_{k \ne i,j}^N E_{env}(k,s_k) +
+    \frac{1}{2} E_{env}(i,a_i) + \frac{1}{2} E_{env}(j,b_j) \\
+    E_{\text{proposed}} &= \frac{1}{2} \sum_{k \ne i,j}^N E_{env}(k,s_k) +
+    \frac{1}{2} E_{env}(i,b_j) + \frac{1}{2} E_{env}(i,a_i).
+\end{align}
+Now noting that $P_{\text{accept}}$ depends only on the diffence between the current and proposed energies, one can compute $P_{\text{accept}}$ in a total of four environment evaluations.
+It then suffices to compute the energy of the full lattice (denoted $E_0$ once at the beginning, and keep track of the energetic changes with respect to $E_0$ thereafter. \footnote{There is additional difficulty in properly handling the case case where $i,j$ are adjacent to each other in the lattice, since then their environments cannot be treated as frozen, but must be updated for the proposed swap case.
+Although the chance of such an event decreases with increasing system size, it invariably causes disastrous results due to the number of Monte Carlo steps.
+The author's implementation of MALM properly handles such edge cases.}
+For $T$ steps of the algorithm, this optimization reduces the complexity from $\mathcal{O}(TN)$ to $\mathcal{O}(N+T)$, which is especially impactful as often thousands or hundreds of thousands of Monte Carlo steps are done in practice.
 
-[discuss Metropolis Monte Carlo algorithm (cite MD book)]
-
-[monte carlo (brief algorithm like MD book)]
-
-[discuss energy decomposition trick to make each update step]
-
-[discuss forcing every step to exchange A and B]
-
-order $d$ square array populated by integers $0, 1$, periodic boundary conditions
-
-
-computational tricks
-    convolution
-    energy partition trick into local energy to reduce complexity
-    mention restriciting proposed exchanges (point to appendix)
-
+Other impactful optimizations include:
+\begin{itemize}
+\item the choice of scheme for subroutine \texttt{select\_ij} in the MALM algorithm (discussion and empirical results in the Appendix motivate enforcing the two randomly selected lattice sites to have different types ($a_i \ne b_j$)),
+\item (in light of the the above optimization) using lists to track and update the location of $A$ and $B$ sites each iteration, for faster random selection of site indices $i,j$,
+\item  mapping the total energy computation and local environment energy calculations to fast implementations of convolution, which also aids in seamless handling the periodic boundary conditions.
+\end{itemize}
 
 \subsection{Termination and Convergence}
-The termination condition for error is on the approximate relative error of the mean energy $\bar{U}$.
-Using a relative error condition is especially important here, as this program will be used to simulate lattices of many different sizes and interactions strengths, where the average of energies may differ by orders of magnitude.
+The primary termination condition employed is on the approximate relative error of the internal energy $U$.
+Using a relative error condition is especially important here, as we use MALM  to simulate and solve lattices of many different sizes and interactions strengths, where the average of energies may differ by orders of magnitude.
 Specifically, termination occurs when
 \begin{align}
-    S_{\bar{U}} =
-    \frac{\sigma_{U}}{\sqrt{N_{it}}} \frac{1}{\bar{U}}
+    S_{U} =
+    \frac{\sigma_{U}}{\sqrt{T}} \frac{1}{U}
     < \tau
 \end{align}
-where $S_{\bar{U}}$ is the relative error in the mean energy, $\sigma_{U}$ is the standard deviation of the computed energies, and $N_{it}$ is the number of Monte Carlo iterations (steps).
+where $S_{U}$ is the relative error in the internal energy, $\sigma_{U}$ is the standard deviation of the computed energies, and $T$ is the number of Monte Carlo iterations (steps).
 The variable $\tau$ is the user specified tolerance, with $\tau = 0.01$ being 1\% error in the average internal energy.
 Emperically, a value of $\tau = 50 \times 10^{-6}$ was found to give well converged results.
 
@@ -201,8 +223,8 @@ Emperically, a value of $N_{it max} = 200 \times 10^3$ was found to give satisfa
 We use the implementation of the lattice mixture Monte Carlo algorithm from the preceeding section to generate three distinct results:
 \begin{itemize}
     \item empirical verification of our implementation's correctness in limiting cases
-    \item one dimensional trends of system behavior with respect to the seven free parameters $z,x,\beta,w_{AA},w_{BB},w_{AB}$
-    \item a database of parameter points and corresponding solutions spread across a subset of the seven dimensional parameter space
+    \item one dimensional trends of system behavior with respect to the six free parameters $z,x,\beta,w_{AA},w_{BB},w_{AB}$
+    \item a database of parameter points and corresponding solutions spread across a subset of the seven dimensional parameter space (the six parameters above plus sites per lattice edge $L$)
 \end{itemize}
 
 \subsection{Verification}
@@ -246,59 +268,70 @@ These plots are collected in Figures \ref{fig:m_AB_hat_versus_z} - \ref{fig:m_AB
 Figure \ref{fig:m_AB_hat_versus_z} shows a nearly linear relationship between $z$ and $\hat{m}_{AB}$ for the test system. \footnote{It is difficult to ascertain the functional form of the dependence with only three points, but this dependence is expected to be linear, as we justify in the next section.} 
 Figure \ref{fig:m_AB_hat_versus_x} shows a nonlinear relationship between $z$ and $\hat{m}_{AB}$ for the test system.
 Figure \ref{fig:m_AB_hat_versus_beta} displays a sharp transition between just above $\beta = 1$. For very cold systems this configuration minimizes $B$-$B$ interactions in favor of $A$-$B$ interactions, with less preference for $A$-$B$ interactions in system with low coldness (high temperature).
-Figure \ref{fig:m_AB_hat_versus_w_AA} shows almost no dependence of $m_{AB}$ on $w_{AA}$, with the present variation likely due to noise.
+Figure \ref{fig:m_AB_hat_versus_w_AA} shows almost no dependence of $m_{AB}$ on $w_{AA}$, with the present variations likely due to noise.
 Figure \ref{fig:m_AB_hat_versus_w_BB} shows another distinct transition-like structure centered around $w_{BB}=0$ eV.
-By symmetry it's therefore likely that a similar dependence exists on $w_{AA}$, but perhaps it is not visible due to the asymmetry in the default values of the $w_{XY}$s.
-Finally, Figure \ref{fig:m_AB_hat_versus_w_AB}
+By symmetry it is therefore likely that a similar dependence exists on $w_{AA}$, but perhaps it is not visible due to the asymmetry in the default values of the $w_{XY}$s.
+Finally, Figure \ref{fig:m_AB_hat_versus_w_AB} shows a clear transition-like dependence of $\hat{m}_{AB}$ on $w_{AB}$.
 
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.65\textwidth]{Figures/m_AB_hat_versus_z.png}
-\caption{Number of $A-B$ interactions per site versus lattice coordination number $z$.}
+\caption{Number of $A$-$B$ interactions per site versus lattice coordination number $z$.}
 \label{fig:m_AB_hat_versus_z}
 \end{figure}
 
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.70\textwidth]{Figures/m_AB_hat_versus_x.png}
-\caption{Number of $A-B$ interactions per site versus $B$ volume fraction $x$.}
+\caption{Number of $A$-$B$ interactions per site versus $B$ volume fraction $x$.}
 \label{fig:m_AB_hat_versus_x}
 \end{figure}
 
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.67\textwidth]{Figures/m_AB_hat_versus_beta.png}
-\caption{Number of $A-B$ interactions per site versus coldness $\beta = \frac{1}{k_B T}$.}
+\caption{Number of $A$-$B$ interactions per site versus coldness $\beta = \frac{1}{k_B T}$.}
 \label{fig:m_AB_hat_versus_beta}
 \end{figure}
 
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.70\textwidth]{Figures/m_AB_hat_versus_w_AA.png}
-\caption{Number of $A-B$ interactions per site versus $A-A$ interaction strength $w_{AA}$.}
+\caption{Number of $A$-$B$ interactions per site versus $A$-$A$ interaction strength $w_{AA}$.}
 \label{fig:m_AB_hat_versus_w_AA}
 \end{figure}
 
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.70\textwidth]{Figures/m_AB_hat_versus_w_BB.png}
-\caption{Number of $A-B$ interactions per site versus $B-B$ interaction strength $w_{BB}$.}
+\caption{Number of $A$-$B$ interactions per site versus $B$-$B$ interaction strength $w_{BB}$.}
 \label{fig:m_AB_hat_versus_w_BB}
 \end{figure}
 
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.70\textwidth]{Figures/m_AB_hat_versus_w_AB.png}
-\caption{Number of $A-B$ interactions per site versus $A-B$ interaction strength $w_{AB}$.}
+\caption{Number of $A$-$B$ interactions per site versus $A$-$B$ interaction strength $w_{AB}$.}
 \label{fig:m_AB_hat_versus_w_AB}
 \end{figure}
 
 \subsection{Solutions at selected parameter points}
-Table \ref{tbl:param_ranges} lists the possible ranges for each of the parameters.
-The spatial dimension $d$ covers all common model dimensions for physical systems, the side lattice side length $L$ was chosen to mix small lattices that almost certainly converge to the proper energy with larger lattices that better represent real physical systems.
-The $B$ volume fraction $x$ only varies between 0 and 0.5 because the system is symmetric under a relabeling of $A \iff B, w_AA \iff w_BB$.
+The MALM implementation was finally used to generate a data set of points occupying subset of the parameters space over $z,L,x,\beta,w_{AA},w_{BB},w_{AB}$.
+Given that the goal of such microscale and nanoscale simulations the inclusion of the number of of sites per lattice edge $L$ may seem like an odd choice of free parameter (and indeed it does not appear in the final data set).
+However, smaller systems converge much more quickly since the configuration space is smaller, and therefore having multiple equivalent configurations with a variety of system sizes is intended to provide a balance between the exactly converged systems and the thermodynamic limit.
+Also, note that all treatment of the model is done on a per-site basis, so the extra dimension introduced by $L$ is eliminated by normalization by $N$.
+
+Table \ref{tbl:param_ranges} lists the possible ranges for each of the seven parameters used when generating sample data points.
+The spatial dimension $d$ covers all common model dimensions for physical systems.
+As mentioned above, the side lattice side length $L$ was chosen to mix small lattices that almost certainly converge to the proper energy with larger lattices at the edge of the computational limit that better represent real physical systems.
+The $B$ volume fraction $x$ only varies between 0 and 0.5 because the system is symmetric under a relabeling of $A \leftrightarrow B, w_AA \leftrightarrow w_BB$.
 The interactions strengths were chosen with reference to real physical systems like water with hydrogen bonds of strength -0.24 eV and liquid argon (a common molecular dynamics model system) with equilibrium interaction -0.01 eV \cite{water} \cite{argon}.
 The range for temperature $T$ goes from absolute zero to one million Kelvin, which is approximately the point at which the thermal energy scale $k_B T$ is equal to that of the the interaction energy scale defined by $w_XY$.
+
+The points to at which MALM was used to solve the system include all $2^7$ vertices of the hypercube defined by the extreme values of the parameters in Table \ref{tbl:param_ranges}, in addition to 1000 random points from the interior of the hypercube.
+At each of these 1128 points, the internal energy $U$ was computed using MALM, with termination at $200 \times 10^3$ iterations or $\hat{S}_{\bar{U}} < 5 \times 10^{-5}$ (whichever came first).
+For all points the lattice was initialized as a random lattice of the specified $B$ volume fraction $x$.
+This raw data consisting of points like $(d,x,L,T,w_{AA},w_{BB},w_{AB},U)$, was then processed to generate corresponding points $(z,x,\beta,w_{AA},w_{BB},w_{AB},\hat{m}_{AB})$.
 
 \begin{center}
 \begin{tabular}{c | l | l | l} 
@@ -316,45 +349,62 @@ The range for temperature $T$ goes from absolute zero to one million Kelvin, whi
 \end{center}
 
 
-
 \section{Model Construction}
-[overall scheme: generate a bunch of data, then use nonlinear least squares to fit a new function for $\hat{U}$ or $\hat{w}_AB$]
 
-do I fit $\hat{U}$ as function of system parameters, or do I fit $m_{AB}/N$ as a function of system parameters?
+We now turn our attention to using the data set from the previous section to create a semi-emperical model for the lattice mixture internal energy per site.
+Given a fixed model function $f_{\hat{m}_{AB}}$ intended to approximate $\hat{m}_{AB}$, we seek the optimal model parameters $\mathbf{v}^*$ for a $f_{\hat{m}_{AB}}(\mathbf{p},\mathbf{v})$, where $\mathbf{p}$ is  parameter point (including $z,x,\beta$,etc.) and $\mathbf{v}$ is the vector of model parameters.
+The optimal model parameters sastify the optimality conditions of the nonlinear least squares problem
+\begin{align}
+\phi(\mathbf{v}) = \mathbf{r}(\mathbf{v})^T \mathbf{r}(\mathbf{v}),
+\quad\quad r_i = \hat{m}_{AB}^{(i)} - f_{\hat{m}_{AB}}(\mathbf{p}^{(i)},\mathbf{v})
+\end{align}
+where $i$ denotes the $i$ data point of the data/sample set (consisting of pairs $(\mathbf{p},\hat{m}_{AB})$, and ranges from one to the number of sampled points.
 
-\subsection{Model equation construction}
+Of course, multiple model functions are possible, and we compare a few alternatives, including the function corresponding to the Bragg-Williams approximation.
+However, not all model functions are physical, and all feasible model functions must satisfy a number of symmetries, obey certain limiting behaviors, have proper units, and so on.
+
+\subsection{Contstraints and the modeling function}
+
 [will need to satisfy some symmetry properties in $x, 1-x$ $w_{AA},w_{AB}$ etc.]
-
-[should have flat multiplier by $z$]
-
-[should have fermi-like transition centered around thermal/interaction transition]
 
 [should reduce to WHAT FORM? in the T=0 case]
 
 [should reduce to the Bragg-Williams approximation for $T \rightarrow \infty$]
 
-The points to which the model was fit include all $2^7$ vertices of the hypercube defined by the extreme values of the parameters in Table \ref{tbl:param_ranges}, in addition to 1000 random points from the interior of the hypercube.
-At each of these 1128 points, the energy $\bar{U}$ was computed using the lattice mixture Monte Carlo scheme detailed previously, with termination at $200 \times 10^3$ iterations or $\hat{S}_{\bar{U}} < 5 \times 10^{-5}$ (whichever came first).
-For all points the lattice was initialized as a random lattice of the specified $B$ volume fraction $x$.
+[should have flat multiplier by $z$, by physical arguments and Bragg-Williams limit?]
+
+[should have fermi-like transition centered around thermal/interaction transition]
+
+[should have the right units]
+
+
+\subsection{Model functions}
+
+\subsection{Model results}
+
+\section{Conclusion}
 
 
 
-\newpage
+
+\clearpage
 \section{Appendix}
 \subsection{Permitted swaps}
 Each Monte Carlo step proposes an exchange between two sites in the lattice.
 Should each exchange propose swaps between two truly random lattice sites (possibly of the same type), or should each swap be forced to exchange lattice sites of different types.
 Of course, swapping two sites of the same type will not change the internal energy, but how does the choice of permitted swaps affect convergence rate and average energy?
-Figure \ref{fig:swap} below shows how convergence (in terms of number of Monte Carlo steps) differs for an example case. One can see that while both choice result in the same mean energy, restricting every swap to exchange sites of different types has multiple advantages.
-First, the ``transient'' or ``relaxation'' time (where the energy moves toward the equilibrium value) is about half the length, and the same error tolerance is achieved in about 70\% of the steps.
-The effect of this choice will be more exaggerated for extremely low and  high volume fractions $x$, where the ``swap any two'' scheme has a high probability of selecting a pair of the same type, whose exchange will not affect the internal energy.
+Figure \ref{fig:swap} below shows how convergence (in terms of number of Monte Carlo steps) differs for an example case.
+One can see that while both choice result in the same mean energy, restricting every swap to exchange sites of different types has multiple advantages.
+First, the ``transient'' or ``relaxation'' time (where the energy moves toward the equilibrium value) is about half the length, and the same error tolerance is achieved in about 70\% as many steps.
+The effect of this choice will be more exaggerated for extremely low and  high volume fractions $x$, where the ``swap any two'' scheme has a high probability of selecting a pair of the same type ($a_i = b_j$), whose exchange will not affect the internal energy.
+In that sense, the figure below gives the ``swap any two'' scheme the best chance for success, and it is still found to be less efficient.
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=0.49\textwidth]{Figures/swap_any_two_convergence.png}
-\includegraphics[width=0.49\textwidth]{Figures/swap_A_B_only_convergence.png}
+\includegraphics[width=0.65\textwidth]{Figures/swap_any_two_convergence.png}
+\includegraphics[width=0.65\textwidth]{Figures/swap_A_B_only_convergence.png}
 \caption{Internal energy versus iteration with $L=100$, $d=2$, $x=0.5$, $\beta=0.1$, $w_{AA}=w_{AB}=-10 \times 10^{-3},w_{BB} = -30 \times 10^{-3}$ eV; both simulations were run until the percentage error in the mean energy was less than 0.005\%.
-The left figure is when swaps may exchange any two sites (independent of their types), while the right figure permits exchanges only between A and B sites.}
+The upper figure is when swaps may exchange any two sites (independent of their types), while the bottom figure permits exchanges only between A and B sites.}
 \label{fig:swap}
 \end{figure}
 
@@ -379,7 +429,7 @@ The low variations throughout characterize the high coldness (lower temperature)
 \end{figure}
 
 
-\newpage
+\clearpage
 \bibliography{references.bib}
 References (USE BIBTEX THOUGH)
 
