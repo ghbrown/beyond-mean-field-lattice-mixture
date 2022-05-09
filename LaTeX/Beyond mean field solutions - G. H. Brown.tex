@@ -350,35 +350,62 @@ This raw data consisting of points like $(d,x,L,T,w_{AA},w_{BB},w_{AB},U)$, was 
 
 
 \section{Model Construction}
+The model function $f_{\hat{m}_{AB}}$ contributes to the internal energy per site as
 
 We now turn our attention to using the data set from the previous section to create a semi-emperical model for the lattice mixture internal energy per site.
-Given a fixed model function $f_{\hat{m}_{AB}}$ intended to approximate $\hat{m}_{AB}$, we seek the optimal model parameters $\mathbf{v}^*$ for a $f_{\hat{m}_{AB}}(\mathbf{p},\mathbf{v})$, where $\mathbf{p}$ is  parameter point (including $z,x,\beta$,etc.) and $\mathbf{v}$ is the vector of model parameters.
+We work in terms of a function $f_{\hat{m}_{AB}}$ intended to approximate $\hat{m}_{AB}$, which contributes to the internal energy per site as
+\begin{align}
+    \hat{U} = \frac{z}{2} \left( (1-x) w_{AA} + x w_{BB} \right) +
+    f_{\hat{m}_{AB}} \left( w_{AB} - \frac{w_{AA} + w_{BB}}{2} \right)
+    \label{eqn:model_U}
+\end{align}
+We seek the optimal model parameters $\mathbf{v}^*$ for $f_{\hat{m}_{AB}}(\mathbf{p},\mathbf{v})$, where $\mathbf{p}$ is  parameter point (including $z,x,\beta$,etc.) and $\mathbf{v}$ is the vector of model parameters.
 The optimal model parameters sastify the optimality conditions of the nonlinear least squares problem
 \begin{align}
 \phi(\mathbf{v}) = \mathbf{r}(\mathbf{v})^T \mathbf{r}(\mathbf{v}),
 \quad\quad r_i = \hat{m}_{AB}^{(i)} - f_{\hat{m}_{AB}}(\mathbf{p}^{(i)},\mathbf{v})
 \end{align}
 where $i$ denotes the $i$ data point of the data/sample set (consisting of pairs $(\mathbf{p},\hat{m}_{AB})$, and ranges from one to the number of sampled points.
-
 Of course, multiple model functions are possible, and we compare a few alternatives, including the function corresponding to the Bragg-Williams approximation.
-However, not all model functions are physical, and all feasible model functions must satisfy a number of symmetries, obey certain limiting behaviors, have proper units, and so on.
 
-\subsection{Contstraints and the modeling function}
+\subsection{Constraints on the modeling function}
+Although many model functions forms are possible, not all are physical.
+Feasible model functions for $\hat{m}_{AB}$ must satisfy a number of properties, including symmetry in the some of th parameters, have certain certain limiting behaviors, and so on, which we now attempt to state in mathematical detail.
 
-[will need to satisfy some symmetry properties in $x, 1-x$ $w_{AA},w_{AB}$ etc.]
+First, since the labelling of $A$ and $B$ is just a notational convention, the equation of $w_{AB}$ should be invariant under respective exchanges $(x,w_AA,w_BB) \longleftrightarrow (1-x,w_{BB},w_{AA})$.
+Observe that the rest of the formula for $\hat{U}$ in Equation \ref{eqn:model_U} satisfies this symmetry automatically, as does the so-called Bragg-Williams model function for $\hat{m}_{AB}$
+\begin{align}
+    f_{\hat{m}_{AB},BW} = z (1-x) x.
+    \label{eqn:BW_model_function}
+\end{align}
 
-[should reduce to WHAT FORM? in the T=0 case]
+In the low coldness (high temperature) macrostates occupy all microstates with equal probability, giving rise to a random lattice (with fixed $B$ volume fraction $x$, of course) in equilibrium.
+Consequently, such a random lattice is exactly the assumption of the Bragg-Williams approximation.
+Therefore, in the low coldness limit our model function must reduce to the Bragg-Williams model function
+\begin{align}
+    \lim_{\beta \rightarrow 0} f_{\hat{m}_{AB}} = z (1-x) x.
+\end{align}
 
-[should reduce to the Bragg-Williams approximation for $T \rightarrow \infty$]
+Additionally, we assert that $f_{\hat{m}_{AB}}$ should be linearly dependent on $z$.
+The other term in Equation \ref{eqn:model_U} and the Bragg-Williams model function both obey this dependence.
+Furthermore, such dependence has a sensible heuristic argument.
+Since $\hat{m}_AB$ counts interactions ``per-site'', it should be strictly proportional to the coordination number $z$ of a single site.
+This is essentially equivalent to assuming occupation statistics are independent of the spatial dimension of the lattice, which is a reasonable first approximation.
+Figure \ref{fig:m_AB_hat_versus_z} attempts to justify this assertion numerically, but it is difficult to extract the exact dependence with only three points.
+Suprisingly, $\hat{m}_{AB}$ appears to be at least weakly nonlinear with $z$, which does not strictly conform to the linear assumption.
 
-[should have flat multiplier by $z$, by physical arguments and Bragg-Williams limit?]
-
-[should have fermi-like transition centered around thermal/interaction transition]
-
-[should have the right units]
-
+Lastly, we note that Figures \ref{fig:m_AB_hat_versus_beta} - \ref{fig:m_AB_hat_versus_w_AB} justify the exististence of some sort of Fermi-function-like behavior involving $\beta,w_{AA},w_{BB},w_{AB}$.
+Of course of model function must also have the right units, which in our case is unitless, since the model function multiplies a term with units of energy in \ref{eqn:model_U}.
 
 \subsection{Model functions}
+[check that $m_AB$ is not off by factor of 2, etc.]
+
+\begin{align}
+    f_{\hat{m}_{AB},1} = 
+    \frac{1}{1 + exp\left(\beta \left(w_{AB} - \frac{w_{AA} + w_{BB}}{2}\right) \right)}
+    z (1-x) x
+\end{align}
+
 
 \subsection{Model results}
 
