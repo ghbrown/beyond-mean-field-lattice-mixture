@@ -44,7 +44,7 @@
 \begin{document}
 \begin{center}
     \textbf{\large Beyond mean field solutions to the lattice mixture model} \\
-    Gabriel Brown
+    G. H. Brown
 \end{center}
 
 %OUTLINE
@@ -236,7 +236,7 @@ Crudely, such cold systems will attempt to maximize the number of adjacent $C-D$
 We now give two examples which demonstrate that the implementation of the lattice mixture Monte Carlo scheme recovers results that matching these physical expectations.
 
 First, we show that applying the scheme in the low coldness (high temperature) regime converges to a random result, even when the starting configuration is ordered.
-For this system $d=2 (z=4)$, $L=100$, $x=0.5$, $\beta = 0.01$ eV$^{-1}$ ($T=1.16 \times 10^6$ K), $w_{AA}=-1$ eV, $w_{BB} = -1$ eV, and $w_{AB} = -0.5$, meaning that the system should energetically prefer minimizing $A$-$B$ contacts.
+For this system $d=2 (z=4)$, $L=100$, $x=0.5$, $\beta = 0.01$ eV$^{-1}$ ($T=1.16 \times 10^6$ K), $w_{AA}=-1$ eV, $w_{BB} = -1$ eV, and $w_{AB} = -0.5$ eV, meaning that the system should energetically prefer minimizing $A$-$B$ contacts.
 However, Figure \ref{fig:melted_lattice} shows a disordered system nonetheless.
 The corresponding convergence plot (Figure \ref{fig:melted_convergence} in the Appendix) shows that even though the system starts at relatively low internal energy, the equilibrium state is the higher energy random state.
 
@@ -263,7 +263,7 @@ Order dominates, following physical intuition.}
 \end{figure}
 
 \subsection{One dimensional trends in free parameters}
-To visualize the dependence of $\hat{m}_{AB}$ on the system parameters $z,x,\beta,w_{AA},w_{BB},w_{AB}$, we perform plots meshing over each of these parameters, while holding the others constant at $z=4$ ($d = 2$), $x = 0.5$, $\beta = 38.7$ eV$^{-1}$ ($T = 300$ K), $w_{AA} = -1.0$ eV, $w_{BB} = 1.0$ eV, $w_{AB} = -0.5$ eV.
+To visualize the dependence of $\hat{m}_{AB}$ on the system parameters $z,x,\beta,w_{AA},w_{BB},w_{AB}$, we perform plots meshing over each of these parameters, while holding the others constant at $z=4$ ($d = 2$), $x = 0.5$, $\beta = 38.7$ eV$^{-1}$ ($T = 300$ K), $w_{AA} = -1.0$ eV, $w_{BB} = 1.0$ eV, $w_{AB} = -0.5$ eV.\footnote{From here on we largely work in terms of $\hat{m}_{AB}$ because when generating models it saves the work of reinventing terms that are guaranteed to be present, streamlining the process.}
 These plots are collected in Figures \ref{fig:m_AB_hat_versus_z} - \ref{fig:m_AB_hat_versus_w_AB}, respectively.
 
 For this system the Bragg-Williams approximation gives $\hat{m}_{AB} = 4 \left(1-\frac{1}{2}\right) \frac{1}{2} = 1$ (unless $z$ or $x$ are varied).
@@ -342,7 +342,7 @@ This raw data consisting of points like $(d,x,L,T,w_{AA},w_{BB},w_{AB},U)$, was 
     \begin{center}
     \begin{tabular}{c | l | l | l} 
         \hline
-        Parameter & Possible Values & Grid spacing & Units \\  \hline
+        \textbf{Parameter} & \textbf{Possible Values} & \textbf{Grid spacing} & \textbf{Units} \\  \hline
         $d$ & $\mathbb{Z} \in \{1,2,3\}$ & discrete & not applicable \\ \hline
         $L$ & $\mathbb{Z} \in [5,100]$ & discrete & not applicable \\ \hline
         $x$ & $\mathbb{R} \in [0.0,0.5)$ & linear & not applicable \\ \hline
@@ -402,18 +402,24 @@ Figure \ref{fig:m_AB_hat_versus_z} attempts to justify this assertion numericall
 Suprisingly, $\hat{m}_{AB}$ appears to be at least weakly nonlinear with $z$, which does not strictly conform to the linear assumption.
 
 Lastly, we note that Figures \ref{fig:m_AB_hat_versus_beta} - \ref{fig:m_AB_hat_versus_w_AB} justify the exististence of some sort of Fermi-function-like behavior involving $\beta,w_{AA},w_{BB},w_{AB}$.
-Some more basic constraints include that the model function must have the right units, which is uniteless since the model function multiplies a term with units of energy in \ref{eqn:model_U}.
+Some more basic constraints include that the model function must have the right units, which is unitless since the model function multiplies a term with units of energy in \ref{eqn:model_U}.
 The model function should also be strictly positive.
 
 \subsection{Model functions}
 We present here a collection of possible model functions, all of which satisfy the aforementioned constraints.
 For simplicity we call $f_{\hat{m}_{AB},X}$ ``model function'' X.
+For convenience, we also define the nondimensional parameter
+\begin{equation}
+    \psi = \beta \left(w_{AB} - \frac{w_{AA} + w_{BB}}{2} \right)
+\end{equation}
+which is closely related to $\chi_{AB}$.
+
 
 Model function 1 has no free parameters, and prepends a multiplicative Fermi-distribution-like term.\footnote{These functions are in no particular order, or rather, they are in chronological order of when I constructed and fit them.}
 
 \begin{align}
     f_{\hat{m}_{AB},1} = 
-    \frac{2}{1 + exp\left(\beta \left(w_{AB} - \frac{w_{AA} + w_{BB}}{2}\right) \right)}
+    \frac{2}{1 + exp\left(\psi\right)}
     z (1-x) x
 \end{align}
 
@@ -431,6 +437,7 @@ Therefore no further investigations into $z$ depedence are performed.}
 \begin{align}
     f_{\hat{m}_{AB},3} = z^{a_3} (1-x) x
 \end{align}
+Model function 4 adds a function $g(\psi)$ to the Fermi-distribution. Function $g(\psi)$ is chosen such that $\lim_{\psi \rightarrow 0} g = 1/2$ (reduction to Bragg-Williams) and $\lim_{\psi \rightarrow \infty} g = a_4$. \begin{align} f_{\hat{m}_{AB},4} &= \left( \frac{1}{1 + exp\left( \psi \right)} + g(\psi) \right) z (1-x) x, \\ g(\psi) &= \frac{2}{\pi} \left(a_4 - \frac{1}{2} \right) \arctan\left( \psi \right) + \frac{1}{2} \end{align}
 
 \subsection{Model results}
 For each of the presented model functions, we compute the optimal model parameters (if there are any) and the mean residual of the model over all 1128 sample points; Table \ref{tbl:model_errors} summarizes these results.
@@ -440,16 +447,19 @@ However, it is clear that parameterization can effectively reduce the average re
 
 Model function 3, which purposefully violates the linearity assumption in $z$, confirms the linearity assumption, since the exponent $a_3$ is nearly 1.0. Strangely, the error of the optimal exponent is greater than the Bragg-Williams model function (of which it is a generalization). This behavior persists, even when the fitting process is started with $a_3 = 1.0$, implying that the residual increases during the fitting process.\footnote{I am using SciPy's fitting library, so any implementation errors are not my own.}
 
+Model function 4, constructed to better capture phase transitions, attains a lower mean residual than the Bragg-Williams approximation, and only introduces one emperical parameter.
+
 \begin{table}[h!]
     \caption{Optimal model functions and their respective error.}
     \begin{center}
     \begin{tabular}{c | c | l} 
         \hline
-        Model function & Optimal model parameters, $\mathbf{v}^*$ & Mean residual \\  \hline
+        \textbf{Model function} & \textbf{Optimal model parameters,} $\mathbf{v}^*$ & \textbf{Mean residual} \\  \hline
         Bragg-Williams & --- & 0.107 \\ \hline
         1 & --- & 0.373 \\ \hline
         2 & $a_2=684 \times 10^3, b_2=94.2 \times 10^3, c_2=d_2=0.328$ & 0.198 \\ \hline
-        3 & $a_3 = 0.981$ & 0.1129
+        3 & $a_3 = 0.981$ & 0.113 \\ \hline
+        4 & $a_4 = 0.817$ & 0.0767
         \label{tbl:model_errors}
     \end{tabular}
     \end{center}
@@ -462,10 +472,11 @@ A computational workflow was presented to generate more accurate models for bina
 The Metropolis algorithm for lattice mixtures (MALM) was developed, implemented, optimized, and verified experimentally.
 MALM was then applied to a selected points in the free parameter space of the lattice mixture model, which generates a data set that can be used to test and new analytical models for the unknown component $\hat{m}_{AB}$ in the expression of the internal energy per site.
 Various physical constraints on model functions for the approximation of $\hat{m}_{AB}$ were given, and multiple example model functions obeying these constraints were constructed, fit, and evaluated.
-Regrettably, none of the current model functions outperform the Bragg-Williams model function.
-However, this is almost certainly because a suitable model function has not yet been constructed, since we present clear evidence of sizable errors in the Bragg-Williams approximation.
-Furture work on this problem includes the generation and testing of more model functions, as well as formulating the problem in a non-dimensional manner to reduce the number of free parameters and increase generality of the final results.
-Finally, connections between the proposed approach and existing ``higher order'' methods for mixtures in literature may also be made.
+One such function attains an average residual 25\% less than the Bragg-Williams approximation on the generated data set.
+Future work on this problem includes the generation and testing of more model functions, with a strong preference for more formal model generation schemes, as the present approach is relatively ad hoc.
+It is the opinion of the author that such approaches could lead to models with perhaps an order of mangnitude better residuals than the best result here.
+Furthermore, it may be beneficial to formulate the problem in a non-dimensional manner to reduce the number of free parameters and increase generality of the final results.
+Finally, connections between the proposed approach and existing ``higher order'' methods for mixtures in literature can also be made.
 
 
 \clearpage

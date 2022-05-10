@@ -96,6 +96,20 @@ def f_m_AB_hat_3(data_file_name,a_3):
     return f
 
 
+def f_m_AB_hat_4(data_file_name,a_4):
+    # model function 4
+    z, x, beta, w_AA, w_BB, w_AB = extract_independent_variables(data_file_name)
+    f = np.zeros(z.shape[0]) # vector of model evaluations
+    for i_p, __ in enumerate(z): # loop over sample points
+        # exchange parameter
+        psi_cur = beta[i_p]*(w_AB[i_p]-0.5*(w_AA[i_p] + w_BB[i_p]))
+        g_cur = (2/np.pi)*(a_4-0.5)*np.arctan(psi_cur) + 0.5
+        f[i_p] = (1/(1 + np.exp(psi_cur)) + g_cur) \
+            *z[i_p]*(1-x[i_p])*x[i_p]
+    return f
+
+
+
 
 if (__name__ == "__main__"):
     fitting_data_file = 'data/processed/fitting_data.txt'
@@ -131,6 +145,13 @@ if (__name__ == "__main__"):
     mean_r_3 = evaluate_model_error(f_m_AB_hat_3,v_optimal_3,
                                      fitting_data_file)
 
+    # model function 4
+    v_optimal_4 = fit_model_function(f_m_AB_hat_4,
+                                     fitting_data_file)
+    mean_r_4 = evaluate_model_error(f_m_AB_hat_4,v_optimal_4,
+                                     fitting_data_file)
+
+
                         
     # print model summaries
     print(f'\n\n')
@@ -144,6 +165,9 @@ if (__name__ == "__main__"):
 
     print(f'mean residual under model function 3 : {mean_r_3}')
     print(f'a_3: {v_optimal_3[0]}')
+
+    print(f'mean residual under model function 4 : {mean_r_4}')
+    print(f'a_4: {v_optimal_4[0]}')
 
 
 
